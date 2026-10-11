@@ -91,12 +91,27 @@ function callerRole(authHeader: string | null): string | null {
   }
 }
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
+};
+
+const JSON_HEADERS = { ...CORS_HEADERS, "Content-Type": "application/json" };
+
 Deno.serve(async (req) => {
+  // The browser's preflight carries no Authorization header, so it has to be
+  // answered before the auth check below.
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+
   const role = callerRole(req.headers.get("Authorization"));
   if (role !== "authenticated" && role !== "service_role") {
     return new Response(JSON.stringify({ ok: false, error: "unauthorized" }), {
       status: 401,
-      headers: { "Content-Type": "application/json" },
+      headers: JSON_HEADERS,
     });
   }
 
@@ -153,13 +168,13 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ ok: true, date: today, count: rows.length }), {
-      headers: { "Content-Type": "application/json" },
+      headers: JSON_HEADERS,
     });
   } catch (err) {
     console.error(err);
     return new Response(JSON.stringify({ ok: false, error: String(err) }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: JSON_HEADERS,
     });
   }
 });
