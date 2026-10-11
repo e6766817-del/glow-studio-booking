@@ -412,7 +412,6 @@ async function ensureDateLoaded(dateStr, force){
   store.byDate[dateStr] = data || [];
   return store.byDate[dateStr];
 }
-function invalidateDate(d){ delete store.byDate[d]; }
 
 function findConflict(dateStr, start, end, excludeId){
   const list = store.byDate[dateStr] || [];
@@ -512,13 +511,13 @@ const DayAppointments = {
     async function markDone(appt){
       const { error } = await supa.from('appointments').update({ status:'done' }).eq('id', appt.id);
       if (error){ showToast(friendlyError(error),'err'); return; }
-      invalidateDate(props.dateStr); await load();
+      await ensureDateLoaded(props.dateStr, true);
       showToast('התור סומן כהושלם');
     }
     async function cancelAppt(appt){
       const { error } = await supa.from('appointments').update({ status:'cancelled' }).eq('id', appt.id);
       if (error){ showToast(friendlyError(error),'err'); return; }
-      invalidateDate(props.dateStr); await load();
+      await ensureDateLoaded(props.dateStr, true);
       showToast('התור בוטל');
     }
     return { list, loading, markDone, cancelAppt };
@@ -651,8 +650,8 @@ const AppointmentModal = {
           ({ error } = await supa.from('appointments').insert(payload));
         }
         if (error) throw error;
-        invalidateDate(form.date);
-        if (isEdit.value && props.editing.appointment_date !== form.date) invalidateDate(props.editing.appointment_date);
+        await ensureDateLoaded(form.date, true);
+        if (isEdit.value && props.editing.appointment_date !== form.date) await ensureDateLoaded(props.editing.appointment_date, true);
         showToast(isEdit.value ? 'התור עודכן' : 'התור נקבע בהצלחה');
         emit('saved');
       }catch(err){
