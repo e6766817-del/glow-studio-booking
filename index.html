@@ -128,7 +128,7 @@
     color:var(--text-soft); font-size:14.5px; font-weight:600; border:none; background:none; text-align:right;
     width:100%;
   }
-  .nav-item .ic{width:19px; text-align:center; flex-shrink:0;}
+  .nav-item .ic{display:inline-flex; flex-shrink:0;}
   .nav-item:hover{background:var(--surface-alt); color:var(--text);}
   .nav-item.active{background:var(--accent-soft); color:var(--accent-dark);}
   .sidebar-footer{margin-top:auto; padding-top:14px; border-top:1px solid var(--border);}
@@ -150,7 +150,7 @@
     text-align:center; padding:52px 20px; color:var(--text-soft); display:flex; flex-direction:column;
     align-items:center; gap:10px;
   }
-  .empty-state .ic{font-size:30px;}
+  .empty-state .ic{display:inline-flex;}
   .empty-state strong{color:var(--text); font-size:15px;}
 
   .appt-list{display:flex; flex-direction:column;}
@@ -231,8 +231,9 @@
   .hint{font-size:12px; color:var(--text-soft);}
   .conflict-box{
     background:var(--danger-soft); color:var(--danger); border-radius:10px; padding:11px 13px; font-size:13px;
-    line-height:1.6;
+    line-height:1.6; display:flex; align-items:flex-start; gap:8px;
   }
+  .conflict-box svg{flex-shrink:0; margin-top:2px;}
   .modal-actions{display:flex; gap:10px; margin-top:20px;}
   .modal-actions .btn{flex:1;}
 
@@ -307,7 +308,7 @@
       color:var(--text-soft); font-size:10.5px; font-weight:600; padding:4px 6px; flex:1;
     }
     .tabbar button.active{color:var(--accent-dark);}
-    .tabbar .ic{font-size:17px;}
+    .tabbar .ic{display:inline-flex;}
     .appt-row{flex-wrap:wrap;}
     .appt-phone{order:3; width:100%; padding-inline-start:108px;}
     .svc-table{display:block; overflow-x:auto;}
@@ -317,7 +318,34 @@
 <div id="app"></div>
 
 <script>
-const { createApp, ref, reactive, computed, onMounted, watch, nextTick } = Vue;
+const { createApp, h, ref, reactive, computed, onMounted, watch, nextTick } = Vue;
+
+/* ---------------- icon set (inline, stroke-based -- no emoji) ---------------- */
+const ICON_PATHS = {
+  calendar: '<rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/>',
+  'calendar-week': '<rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="9" y1="9" x2="9" y2="21"/><line x1="15" y1="9" x2="15" y2="21"/><line x1="3" y1="15" x2="21" y2="15"/>',
+  sparkles: '<path d="M12 3l1.6 4.9 4.9 1.6-4.9 1.6L12 16l-1.6-4.9-4.9-1.6 4.9-1.6L12 3z"/><path d="M19 2.3l.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5 1.5-.5.5-1.5z"/>',
+  sliders: '<line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="2"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>',
+  check: '<polyline points="4 12 9 17 20 6"/>',
+  x: '<line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/>',
+  'log-out': '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  'chevron-left': '<polyline points="15 18 9 12 15 6"/>',
+  'chevron-right': '<polyline points="9 18 15 12 9 6"/>',
+  'alert-triangle': '<polygon points="12,3 22,20 2,20"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/>',
+  'empty-calendar': '<rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="7.5" y1="14" x2="7.51" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16.5" y1="14" x2="16.51" y2="14"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+};
+const Icon = {
+  props: { name: String, size: { type:[Number,String], default:18 } },
+  render(){
+    return h('svg', {
+      width: this.size, height: this.size, viewBox: '0 0 24 24', fill: 'none',
+      stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap':'round', 'stroke-linejoin':'round',
+      'aria-hidden': 'true', innerHTML: ICON_PATHS[this.name] || '',
+    });
+  }
+};
 
 /* ---------------- Supabase config ----------------
    Filled in once the real Supabase project exists; until then the page
@@ -490,9 +518,9 @@ const AppointmentRow = {
     </div>
     <div class="appt-phone" dir="ltr">{{ appt.client_phone }}</div>
     <div class="appt-actions" v-if="appt.status==='confirmed'">
-      <button class="icon-btn" title="עריכה" @click="$emit('edit', appt)">✎</button>
-      <button class="icon-btn" title="סימון כהושלם" @click="$emit('done', appt)">✓</button>
-      <button class="icon-btn" title="ביטול תור" @click="$emit('cancel', appt)">✕</button>
+      <button class="icon-btn" title="עריכה" @click="$emit('edit', appt)"><icon name="edit" size="15"/></button>
+      <button class="icon-btn" title="סימון כהושלם" @click="$emit('done', appt)"><icon name="check" size="15"/></button>
+      <button class="icon-btn" title="ביטול תור" @click="$emit('cancel', appt)"><icon name="x" size="15"/></button>
     </div>
   </div>`
 };
@@ -529,7 +557,7 @@ const DayAppointments = {
         @edit="$emit('edit',$event)" @done="markDone" @cancel="cancelAppt" />
     </div>
     <div class="empty-state" v-else-if="!loading">
-      <div class="ic">🗓️</div>
+      <div class="ic"><icon name="empty-calendar" size="30"/></div>
       <strong>אין תורים ליום הזה</strong>
       <span>לוחצים על "תור חדש" כדי להוסיף את התור הראשון</span>
     </div>
@@ -553,8 +581,8 @@ const TodayView = {
   template: `
   <div>
     <div class="week-nav">
-      <button class="icon-btn" @click="shift(-1)">‹</button>
-      <button class="icon-btn" @click="shift(1)">›</button>
+      <button class="icon-btn" title="יום קודם" @click="shift(-1)"><icon name="chevron-left" size="16"/></button>
+      <button class="icon-btn" title="יום הבא" @click="shift(1)"><icon name="chevron-right" size="16"/></button>
       <button class="btn btn-ghost" style="padding:7px 14px;font-size:13px" v-if="!isToday" @click="goToday">היום</button>
       <strong style="margin-inline-start:4px">{{ label }}</strong>
     </div>
@@ -578,8 +606,8 @@ const WeekView = {
   template: `
   <div>
     <div class="week-nav">
-      <button class="icon-btn" @click="shiftWeek(-1)">‹</button>
-      <button class="icon-btn" @click="shiftWeek(1)">›</button>
+      <button class="icon-btn" title="שבוע קודם" @click="shiftWeek(-1)"><icon name="chevron-left" size="16"/></button>
+      <button class="icon-btn" title="שבוע הבא" @click="shiftWeek(1)"><icon name="chevron-right" size="16"/></button>
       <strong style="margin-inline-start:4px">{{ heDateShort(days[0]) }} – {{ heDateShort(days[6]) }}</strong>
     </div>
     <div class="week-grid">
@@ -699,7 +727,7 @@ const AppointmentModal = {
     <div class="modal">
       <div class="modal-head">
         <h3>{{ isEdit ? 'עריכת תור' : 'תור חדש' }}</h3>
-        <button class="icon-btn" @click="$emit('close')">✕</button>
+        <button class="icon-btn" title="סגירה" @click="$emit('close')"><icon name="x" size="16"/></button>
       </div>
       <div class="form-grid">
         <div class="field">
@@ -724,7 +752,7 @@ const AppointmentModal = {
         </div>
         <div class="hint" v-if="service && form.start_time">סיום משוער: {{ endTime }} ({{ service.duration_minutes }} דקות)</div>
         <div class="conflict-box" v-if="!loadingSlots && !availableSlots.length">
-          ⚠️ אין שעות פנויות ביום הזה לטיפול שנבחר. נסי תאריך אחר או טיפול קצר יותר.
+          <icon name="alert-triangle" size="15"/> אין שעות פנויות ביום הזה לטיפול שנבחר. נסי תאריך אחר או טיפול קצר יותר.
         </div>
         <div class="form-row-2">
           <div class="field">
@@ -906,13 +934,13 @@ const AppShell = {
   <div class="shell">
     <aside class="sidebar">
       <div class="brand"><div class="mark">G</div><span>Glow Studio</span></div>
-      <button class="nav-item" :class="{active:view==='today'}" @click="view='today'"><span class="ic">🗓️</span>היום</button>
-      <button class="nav-item" :class="{active:view==='week'}" @click="view='week'"><span class="ic">📆</span>השבוע</button>
-      <button class="nav-item" :class="{active:view==='services'}" @click="view='services'"><span class="ic">💅</span>טיפולים</button>
-      <button class="nav-item" :class="{active:view==='settings'}" @click="view='settings'"><span class="ic">⚙️</span>הגדרות</button>
+      <button class="nav-item" :class="{active:view==='today'}" @click="view='today'"><span class="ic"><icon name="calendar" size="18"/></span>היום</button>
+      <button class="nav-item" :class="{active:view==='week'}" @click="view='week'"><span class="ic"><icon name="calendar-week" size="18"/></span>השבוע</button>
+      <button class="nav-item" :class="{active:view==='services'}" @click="view='services'"><span class="ic"><icon name="sparkles" size="18"/></span>טיפולים</button>
+      <button class="nav-item" :class="{active:view==='settings'}" @click="view='settings'"><span class="ic"><icon name="sliders" size="18"/></span>הגדרות</button>
       <div class="sidebar-footer">
         <div class="user-email" dir="ltr">{{ store.session?.user?.email }}</div>
-        <button class="nav-item" @click="logout"><span class="ic">↩</span>התנתקות</button>
+        <button class="nav-item" @click="logout"><span class="ic"><icon name="log-out" size="18"/></span>התנתקות</button>
       </div>
     </aside>
 
@@ -931,13 +959,13 @@ const AppShell = {
       </div>
     </div>
 
-    <button class="fab" @click="openNew" v-if="view==='today' || view==='week'">+ תור חדש</button>
+    <button class="fab" @click="openNew" v-if="view==='today' || view==='week'"><icon name="plus" size="17"/> תור חדש</button>
 
     <nav class="tabbar">
-      <button :class="{active:view==='today'}" @click="view='today'"><span class="ic">🗓️</span>היום</button>
-      <button :class="{active:view==='week'}" @click="view='week'"><span class="ic">📆</span>השבוע</button>
-      <button :class="{active:view==='services'}" @click="view='services'"><span class="ic">💅</span>טיפולים</button>
-      <button :class="{active:view==='settings'}" @click="view='settings'"><span class="ic">⚙️</span>הגדרות</button>
+      <button :class="{active:view==='today'}" @click="view='today'"><span class="ic"><icon name="calendar" size="18"/></span>היום</button>
+      <button :class="{active:view==='week'}" @click="view='week'"><span class="ic"><icon name="calendar-week" size="18"/></span>השבוע</button>
+      <button :class="{active:view==='services'}" @click="view='services'"><span class="ic"><icon name="sparkles" size="18"/></span>טיפולים</button>
+      <button :class="{active:view==='settings'}" @click="view='settings'"><span class="ic"><icon name="sliders" size="18"/></span>הגדרות</button>
     </nav>
 
     <appointment-modal v-if="modalOpen" :editing="editingAppt" @close="closeModal" @saved="onSaved" />
@@ -977,5 +1005,7 @@ const Root = {
   <div class="toast" :class="toast.type==='err'?'err':'ok'" v-if="toast.show">{{ toast.msg }}</div>`
 };
 
-createApp(Root).mount('#app');
+const app = createApp(Root);
+app.component('icon', Icon);
+app.mount('#app');
 </script>
