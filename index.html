@@ -1,0 +1,950 @@
+<!-- Glow Studio -- appointment scheduler for a solo esthetician -->
+<title>Glow Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/vue@3.4.21/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
+
+<style>
+  /* Layout concept: fixed side nav (desktop) / bottom tab bar (phone), content column
+     of cards over a soft warm surface; a single floating action button starts a booking. */
+  :root{
+    --bg:#fbf4f2;
+    --surface:#ffffff;
+    --surface-alt:#fdf0ee;
+    --border:#f0dcd8;
+    --text:#2c2222;
+    --text-soft:#8a7877;
+    --accent:#b5466f;
+    --accent-dark:#8a3455;
+    --accent-soft:#f7e3ec;
+    --success:#3f8f5f;
+    --success-soft:#e5f3e9;
+    --danger:#c0473f;
+    --danger-soft:#fbe9e7;
+    --warning:#b1792c;
+    --warning-soft:#faf0df;
+    --shadow: 0 1px 2px rgba(44,34,34,.04), 0 8px 24px -12px rgba(44,34,34,.18);
+    --font-display:'Frank Ruhl Libre', Georgia, 'Times New Roman', serif;
+    --font-body:'Heebo', Arial, sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#211a1a; --surface:#2a2222; --surface-alt:#332828; --border:#443535;
+      --text:#f3e9e7; --text-soft:#b7a4a2;
+      --accent:#e487ac; --accent-dark:#f0a9c4; --accent-soft:#3a2630;
+      --success:#7bc999; --success-soft:#20332a;
+      --danger:#e2847c; --danger-soft:#3a2524;
+      --warning:#dcae6b; --warning-soft:#392e1e;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#211a1a; --surface:#2a2222; --surface-alt:#332828; --border:#443535;
+    --text:#f3e9e7; --text-soft:#b7a4a2;
+    --accent:#e487ac; --accent-dark:#f0a9c4; --accent-soft:#3a2630;
+    --success:#7bc999; --success-soft:#20332a;
+    --danger:#e2847c; --danger-soft:#3a2524;
+    --warning:#dcae6b; --warning-soft:#392e1e;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:var(--font-body); direction:rtl;
+    min-height:100%;
+  }
+  html,body{height:100%;}
+  h1,h2,h3,.brand{font-family:var(--font-display);}
+  button,input,select,textarea{font-family:inherit; color:inherit;}
+  a{color:var(--accent);}
+  ::selection{background:var(--accent-soft); color:var(--accent-dark);}
+
+  #app{min-height:100%; display:flex; flex-direction:column;}
+
+  /* ---------- Login ---------- */
+  .login-screen{
+    min-height:100%; display:flex; align-items:center; justify-content:center;
+    padding:32px 16px; background:
+      radial-gradient(60% 50% at 85% 10%, var(--accent-soft), transparent 60%),
+      var(--bg);
+  }
+  .login-card{
+    width:100%; max-width:380px; background:var(--surface); border:1px solid var(--border);
+    border-radius:20px; padding:36px 28px; box-shadow:var(--shadow);
+  }
+  .login-brand{text-align:center; margin-bottom:28px;}
+  .login-brand .mark{
+    width:52px; height:52px; border-radius:50%; margin:0 auto 14px; display:flex;
+    align-items:center; justify-content:center; background:var(--accent-soft); color:var(--accent-dark);
+    font-family:var(--font-display); font-size:22px; font-weight:700;
+  }
+  .login-brand h1{font-size:22px; margin:0 0 4px; font-weight:700;}
+  .login-brand p{margin:0; color:var(--text-soft); font-size:13.5px;}
+  .field{display:flex; flex-direction:column; gap:6px; margin-bottom:16px;}
+  .field label{font-size:12.5px; color:var(--text-soft); font-weight:600;}
+  .field input{
+    border:1px solid var(--border); border-radius:10px; padding:11px 13px; font-size:15px;
+    background:var(--bg); color:var(--text); outline:none; transition:border-color .15s;
+  }
+  .field input:focus{border-color:var(--accent);}
+  .btn{
+    border:none; border-radius:10px; padding:12px 18px; font-size:15px; font-weight:600;
+    cursor:pointer; transition:transform .08s, opacity .15s; display:inline-flex; align-items:center;
+    justify-content:center; gap:8px; white-space:nowrap;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn:disabled{opacity:.55; cursor:not-allowed;}
+  .btn-primary{background:var(--accent); color:#fff; width:100%;}
+  .btn-primary:hover:not(:disabled){background:var(--accent-dark);}
+  .btn-ghost{background:transparent; color:var(--text); border:1px solid var(--border);}
+  .btn-ghost:hover{background:var(--surface-alt);}
+  .btn-danger-text{background:transparent; color:var(--danger); padding:8px 10px;}
+  .login-error{
+    background:var(--danger-soft); color:var(--danger); border-radius:10px; padding:10px 12px;
+    font-size:13px; margin-bottom:14px;
+  }
+  .login-hint{margin-top:18px; text-align:center; font-size:12px; color:var(--text-soft); line-height:1.6;}
+
+  /* ---------- Shell ---------- */
+  .shell{display:flex; flex:1; min-height:100%;}
+  .sidebar{
+    width:224px; flex-shrink:0; background:var(--surface); border-inline-start:1px solid var(--border);
+    display:flex; flex-direction:column; padding:20px 14px; gap:4px;
+  }
+  .sidebar .brand{display:flex; align-items:center; gap:10px; padding:4px 8px 22px;}
+  .sidebar .brand .mark{
+    width:34px; height:34px; border-radius:50%; background:var(--accent-soft); color:var(--accent-dark);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; flex-shrink:0;
+  }
+  .sidebar .brand span{font-weight:700; font-size:16.5px;}
+  .nav-item{
+    display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:10px; cursor:pointer;
+    color:var(--text-soft); font-size:14.5px; font-weight:600; border:none; background:none; text-align:right;
+    width:100%;
+  }
+  .nav-item .ic{width:19px; text-align:center; flex-shrink:0;}
+  .nav-item:hover{background:var(--surface-alt); color:var(--text);}
+  .nav-item.active{background:var(--accent-soft); color:var(--accent-dark);}
+  .sidebar-footer{margin-top:auto; padding-top:14px; border-top:1px solid var(--border);}
+  .sidebar-footer .user-email{font-size:11.5px; color:var(--text-soft); padding:0 12px 8px; word-break:break-all;}
+
+  .main{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .topbar{
+    position:sticky; top:env(safe-area-inset-top,0px); z-index:10; background:var(--bg);
+    padding:20px 24px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    border-bottom:1px solid transparent;
+  }
+  .topbar h2{font-size:21px; margin:0; font-weight:700;}
+  .topbar .sub{font-size:13px; color:var(--text-soft); margin-top:2px;}
+  .content{padding:4px 24px 100px; flex:1;}
+
+  /* ---------- Cards / lists ---------- */
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow);}
+  .empty-state{
+    text-align:center; padding:52px 20px; color:var(--text-soft); display:flex; flex-direction:column;
+    align-items:center; gap:10px;
+  }
+  .empty-state .ic{font-size:30px;}
+  .empty-state strong{color:var(--text); font-size:15px;}
+
+  .appt-list{display:flex; flex-direction:column;}
+  .appt-row{
+    display:flex; align-items:center; gap:16px; padding:16px 18px; border-bottom:1px solid var(--border);
+  }
+  .appt-row:last-child{border-bottom:none;}
+  .appt-time{
+    width:92px; flex-shrink:0; font-weight:700; font-size:14.5px; font-variant-numeric:tabular-nums;
+    color:var(--accent-dark);
+  }
+  .appt-time .dur{display:block; font-weight:400; font-size:11.5px; color:var(--text-soft); margin-top:2px;}
+  .appt-main{flex:1; min-width:0;}
+  .appt-main .client{font-weight:700; font-size:15px;}
+  .appt-main .service{color:var(--text-soft); font-size:13px; margin-top:2px;}
+  .appt-main .notes{color:var(--text-soft); font-size:12px; margin-top:4px; font-style:italic;}
+  .appt-phone{font-size:12.5px; color:var(--text-soft); font-variant-numeric:tabular-nums; white-space:nowrap;}
+  .appt-actions{display:flex; gap:6px; flex-shrink:0;}
+  .icon-btn{
+    border:1px solid var(--border); background:var(--surface); border-radius:8px; width:32px; height:32px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; color:var(--text-soft);
+  }
+  .icon-btn:hover{background:var(--surface-alt); color:var(--text);}
+  .badge{
+    font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap;
+  }
+  .badge-done{background:var(--success-soft); color:var(--success);}
+  .badge-cancelled{background:var(--danger-soft); color:var(--danger); text-decoration:line-through;}
+
+  .fab{
+    position:fixed; bottom:calc(24px + env(safe-area-inset-bottom,0px)); left:28px; z-index:20;
+    background:var(--accent); color:#fff; border:none; border-radius:999px; padding:15px 22px;
+    font-size:15px; font-weight:700; box-shadow:0 10px 28px -8px rgba(181,70,111,.55); cursor:pointer;
+    display:flex; align-items:center; gap:8px;
+  }
+  .fab:hover{background:var(--accent-dark);}
+
+  /* ---------- Week view ---------- */
+  .week-nav{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+  .week-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:10px;}
+  .week-day{
+    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 10px;
+    cursor:pointer; min-height:108px; display:flex; flex-direction:column; gap:8px;
+  }
+  .week-day:hover{border-color:var(--accent);}
+  .week-day.today{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset;}
+  .week-day .wd-name{font-size:12px; color:var(--text-soft); font-weight:600;}
+  .week-day .wd-date{font-size:17px; font-weight:700;}
+  .week-day .wd-count{
+    margin-top:auto; font-size:11.5px; font-weight:700; color:var(--accent-dark); background:var(--accent-soft);
+    border-radius:999px; padding:3px 9px; align-self:flex-start;
+  }
+  .week-day.closed{opacity:.5;}
+
+  /* ---------- Forms (modal + settings) ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(30,20,20,.42); display:flex; align-items:flex-end;
+    justify-content:center; z-index:50; padding:0;
+  }
+  @media (min-width:640px){ .overlay{align-items:center; padding:24px;} }
+  .modal{
+    background:var(--surface); width:100%; max-width:480px; max-height:92vh; overflow-y:auto;
+    border-radius:20px 20px 0 0; padding:24px 22px calc(24px + env(safe-area-inset-bottom,0px));
+    box-shadow:var(--shadow);
+  }
+  @media (min-width:640px){ .modal{border-radius:20px;} }
+  .modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
+  .modal-head h3{margin:0; font-size:18px;}
+  .modal-head .icon-btn{border:none;}
+  .form-grid{display:flex; flex-direction:column; gap:14px;}
+  .form-row-2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .field select, .field textarea{
+    border:1px solid var(--border); border-radius:10px; padding:11px 13px; font-size:14.5px;
+    background:var(--bg); color:var(--text); outline:none; font-family:inherit;
+  }
+  .field select:focus, .field textarea:focus{border-color:var(--accent);}
+  .field textarea{resize:vertical; min-height:60px;}
+  .hint{font-size:12px; color:var(--text-soft);}
+  .conflict-box{
+    background:var(--danger-soft); color:var(--danger); border-radius:10px; padding:11px 13px; font-size:13px;
+    line-height:1.6;
+  }
+  .modal-actions{display:flex; gap:10px; margin-top:20px;}
+  .modal-actions .btn{flex:1;}
+
+  /* ---------- Services & settings ---------- */
+  .svc-table{width:100%; border-collapse:collapse;}
+  .svc-table th{
+    text-align:right; font-size:11.5px; color:var(--text-soft); font-weight:700; padding:0 18px 10px;
+    text-transform:uppercase; letter-spacing:.03em;
+  }
+  .svc-table td{padding:12px 18px; border-top:1px solid var(--border); font-size:14px; vertical-align:middle;}
+  .svc-table input[type=text], .svc-table input[type=number]{
+    border:1px solid transparent; background:transparent; border-radius:8px; padding:6px 8px; font-size:14px;
+    color:var(--text); width:100%; font-family:inherit;
+  }
+  .svc-table input:hover, .svc-table input:focus{border-color:var(--border); background:var(--bg);}
+  .svc-table input[type=number]{width:70px; font-variant-numeric:tabular-nums;}
+  .toggle{
+    width:38px; height:22px; border-radius:999px; background:var(--border); position:relative; cursor:pointer;
+    flex-shrink:0; border:none; padding:0;
+  }
+  .toggle.on{background:var(--accent);}
+  .toggle .knob{
+    position:absolute; top:2px; inset-inline-start:2px; width:18px; height:18px; border-radius:50%; background:#fff;
+    transition:inset-inline-start .15s; box-shadow:0 1px 2px rgba(0,0,0,.2);
+  }
+  .toggle.on .knob{inset-inline-start:18px;}
+  .add-service-row{display:flex; gap:10px; padding:16px 18px; flex-wrap:wrap; align-items:flex-end;}
+  .section-title{font-size:15.5px; font-weight:700; margin:0 0 2px;}
+  .section-sub{font-size:13px; color:var(--text-soft); margin:0 0 14px;}
+  .settings-block{padding:20px; display:flex; flex-direction:column; gap:14px;}
+  .hours-row{display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid var(--border);}
+  .hours-row:last-child{border-bottom:none;}
+  .hours-row .day-name{width:76px; font-weight:600; font-size:14px; flex-shrink:0;}
+  .hours-row input[type=time]{
+    border:1px solid var(--border); border-radius:8px; padding:7px 9px; font-size:13.5px; background:var(--bg);
+    color:var(--text); font-family:inherit;
+  }
+  .hours-row .to{color:var(--text-soft); font-size:13px;}
+  .hours-row .closed-label{color:var(--text-soft); font-size:13px;}
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed; bottom:calc(24px + env(safe-area-inset-bottom,0px)); right:28px; z-index:60;
+    background:var(--text); color:var(--bg); padding:13px 18px; border-radius:12px; font-size:13.5px;
+    box-shadow:var(--shadow); display:flex; align-items:center; gap:10px; max-width:320px;
+  }
+  .toast.err{background:var(--danger);}
+  .toast.ok{background:var(--success);}
+
+  /* ---------- Bottom tab bar (phone) ---------- */
+  .tabbar{display:none;}
+  .section-gap{height:14px;}
+
+  @media (max-width: 860px){
+    .sidebar{display:none;}
+    .shell{flex-direction:column;}
+    .content{padding:4px 16px 92px;}
+    .topbar{padding:18px 16px 10px;}
+    .form-row-2{grid-template-columns:1fr;}
+    .week-grid{grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px;}
+    .week-day{min-height:84px; padding:8px 4px;}
+    .week-day .wd-date{font-size:14px;}
+    .week-day .wd-count{font-size:10px; padding:2px 6px;}
+    .fab{left:16px; bottom:calc(76px + env(safe-area-inset-bottom,0px)); padding:14px 18px; font-size:14px;}
+    .tabbar{
+      display:flex; position:fixed; bottom:0; inset-inline:0; z-index:15; background:var(--surface);
+      border-top:1px solid var(--border); padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px));
+      justify-content:space-around;
+    }
+    .tabbar button{
+      background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px;
+      color:var(--text-soft); font-size:10.5px; font-weight:600; padding:4px 6px; flex:1;
+    }
+    .tabbar button.active{color:var(--accent-dark);}
+    .tabbar .ic{font-size:17px;}
+    .appt-row{flex-wrap:wrap;}
+    .appt-phone{order:3; width:100%; padding-inline-start:108px;}
+    .svc-table{display:block; overflow-x:auto;}
+  }
+</style>
+
+<div id="app"></div>
+
+<script>
+const { createApp, ref, reactive, computed, onMounted, watch, nextTick } = Vue;
+
+/* ---------------- Supabase config ----------------
+   Filled in once the real Supabase project exists; until then the page
+   renders fully but data calls will show a friendly connection error. */
+const SUPABASE_URL = "https://hmnufsmusrgadbetpsaq.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtbnVmc211c3JnYWRiZXRwc2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MDk5MTMsImV4cCI6MjEwNzI4NTkxM30.IdFekkvhxAwTR9KNmQSKi_x2xzIPSYbgrP_86HD8D5c";
+const supa = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+/* ---------------- date/time helpers ---------------- */
+const WEEKDAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function toISODate(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function parseISODate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function startOfWeek(d){ const r=new Date(d); r.setDate(r.getDate()-r.getDay()); return r; }
+function heDate(d){ return `יום ${WEEKDAYS[d.getDay()]}, ${d.getDate()} ב${MONTHS[d.getMonth()]}`; }
+function heDateShort(d){ return `${d.getDate()}/${d.getMonth()+1}`; }
+function timeToMin(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+function minToTime(m){ m=((m%1440)+1440)%1440; return `${pad(Math.floor(m/60))}:${pad(m%60)}`; }
+function addMinToTime(t,mins){ return minToTime(timeToMin(t)+mins); }
+function fmtTime(t){ return t ? t.slice(0,5) : ''; }
+function todayISO(){ return toISODate(new Date()); }
+
+/* ---------------- shared store ---------------- */
+const store = reactive({
+  session: null,
+  services: [],
+  businessHours: [],
+  settings: null,
+  byDate: {},       // 'YYYY-MM-DD' -> appointments[]
+  loadingStatic: false,
+  bootError: '',
+});
+
+let toastTimer = null;
+const toast = reactive({ show:false, msg:'', type:'ok' });
+function showToast(msg, type='ok'){
+  toast.show = true; toast.msg = msg; toast.type = type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ toast.show = false; }, 3200);
+}
+
+function friendlyError(err){
+  if (!supa) return 'החיבור ל-Supabase עדיין לא הוגדר באתר הזה.';
+  const msg = (err && (err.message || err.error_description)) || 'משהו השתבש, נסי שוב.';
+  if (/Invalid login credentials/i.test(msg)) return 'אימייל או סיסמה שגויים.';
+  if (/Failed to fetch/i.test(msg)) return 'בעיית חיבור לשרת. בדקי את החיבור לאינטרנט ונסי שוב.';
+  return msg;
+}
+
+async function loadStaticData(){
+  if (!supa) { store.bootError = 'החיבור ל-Supabase עדיין לא הוגדר.'; return; }
+  store.loadingStatic = true;
+  try{
+    const [svcRes, hoursRes, settingsRes] = await Promise.all([
+      supa.from('services').select('*').eq('active', true).order('sort_order'),
+      supa.from('business_hours').select('*').order('day_of_week'),
+      supa.from('business_settings').select('*').eq('id',1).single(),
+    ]);
+    if (svcRes.error) throw svcRes.error;
+    if (hoursRes.error) throw hoursRes.error;
+    if (settingsRes.error) throw settingsRes.error;
+    store.services = svcRes.data || [];
+    store.businessHours = hoursRes.data || [];
+    store.settings = settingsRes.data || null;
+  }catch(err){
+    store.bootError = friendlyError(err);
+  }finally{
+    store.loadingStatic = false;
+  }
+}
+
+async function loadAllServices(){ // includes inactive, for the services screen
+  if (!supa) return [];
+  const { data, error } = await supa.from('services').select('*').order('sort_order');
+  if (error) { showToast(friendlyError(error), 'err'); return []; }
+  return data || [];
+}
+
+async function ensureDateLoaded(dateStr, force){
+  if (!supa) return [];
+  if (!force && store.byDate[dateStr]) return store.byDate[dateStr];
+  const { data, error } = await supa
+    .from('appointments')
+    .select('*, services(name, duration_minutes)')
+    .eq('appointment_date', dateStr)
+    .neq('status','cancelled')
+    .order('start_time');
+  if (error){ showToast(friendlyError(error), 'err'); return []; }
+  store.byDate[dateStr] = data || [];
+  return store.byDate[dateStr];
+}
+function invalidateDate(d){ delete store.byDate[d]; }
+
+function findConflict(dateStr, start, end, excludeId){
+  const list = store.byDate[dateStr] || [];
+  const s = timeToMin(start), e = timeToMin(end);
+  return list.find(a => a.id !== excludeId && a.status !== 'cancelled' &&
+    s < timeToMin(a.end_time) && e > timeToMin(a.start_time));
+}
+
+/* ---------------- Login ---------------- */
+const LoginView = {
+  setup(){
+    const email = ref('');
+    const password = ref('');
+    const error = ref('');
+    const loading = ref(false);
+    async function submit(){
+      if (!supa){ error.value = 'החיבור ל-Supabase עדיין לא הוגדר באתר הזה.'; return; }
+      error.value = ''; loading.value = true;
+      try{
+        const { data, error: err } = await supa.auth.signInWithPassword({ email: email.value, password: password.value });
+        if (err) throw err;
+        store.session = data.session;
+      }catch(err){
+        error.value = friendlyError(err);
+      }finally{
+        loading.value = false;
+      }
+    }
+    return { email, password, error, loading, submit };
+  },
+  template: `
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="mark">G</div>
+        <h1>Glow Studio</h1>
+        <p>כניסה למערכת ניהול התורים</p>
+      </div>
+      <div class="login-error" v-if="error">{{ error }}</div>
+      <form @submit.prevent="submit">
+        <div class="field">
+          <label for="login-email">אימייל</label>
+          <input id="login-email" type="email" v-model="email" required autocomplete="username" dir="ltr" style="text-align:left">
+        </div>
+        <div class="field">
+          <label for="login-password">סיסמה</label>
+          <input id="login-password" type="password" v-model="password" required autocomplete="current-password" dir="ltr" style="text-align:left">
+        </div>
+        <button class="btn btn-primary" type="submit" :disabled="loading">{{ loading ? 'מתחברת…' : 'התחברות' }}</button>
+      </form>
+      <p class="login-hint">המערכת מיועדת לשימוש הקוסמטיקאית בלבד.<br>לקוחות קובעות תור בטלפון.</p>
+    </div>
+  </div>`
+};
+
+/* ---------------- Appointment row ---------------- */
+const AppointmentRow = {
+  props: ['appt'],
+  emits: ['edit','done','cancel'],
+  setup(props, { emit }){
+    const svcName = computed(()=> props.appt.services ? props.appt.services.name : 'טיפול');
+    return { svcName, fmtTime };
+  },
+  template: `
+  <div class="appt-row">
+    <div class="appt-time">{{ fmtTime(appt.start_time) }}–{{ fmtTime(appt.end_time) }}
+      <span class="dur" v-if="appt.services">{{ appt.services.duration_minutes }} דק׳</span>
+    </div>
+    <div class="appt-main">
+      <div class="client">
+        {{ appt.client_name }}
+        <span class="badge badge-done" v-if="appt.status==='done'">הושלם</span>
+      </div>
+      <div class="service">{{ svcName }}</div>
+      <div class="notes" v-if="appt.notes">{{ appt.notes }}</div>
+    </div>
+    <div class="appt-phone" dir="ltr">{{ appt.client_phone }}</div>
+    <div class="appt-actions" v-if="appt.status==='confirmed'">
+      <button class="icon-btn" title="עריכה" @click="$emit('edit', appt)">✎</button>
+      <button class="icon-btn" title="סימון כהושלם" @click="$emit('done', appt)">✓</button>
+      <button class="icon-btn" title="ביטול תור" @click="$emit('cancel', appt)">✕</button>
+    </div>
+  </div>`
+};
+
+/* ---------------- Day list (used by Today view) ---------------- */
+const DayAppointments = {
+  components: { AppointmentRow },
+  props: ['dateStr'],
+  emits: ['edit'],
+  setup(props, { emit }){
+    const list = computed(()=> store.byDate[props.dateStr] || []);
+    const loading = ref(false);
+    async function load(){ loading.value = true; await ensureDateLoaded(props.dateStr); loading.value = false; }
+    watch(()=>props.dateStr, load, { immediate:true });
+
+    async function markDone(appt){
+      const { error } = await supa.from('appointments').update({ status:'done' }).eq('id', appt.id);
+      if (error){ showToast(friendlyError(error),'err'); return; }
+      invalidateDate(props.dateStr); await load();
+      showToast('התור סומן כהושלם');
+    }
+    async function cancelAppt(appt){
+      const { error } = await supa.from('appointments').update({ status:'cancelled' }).eq('id', appt.id);
+      if (error){ showToast(friendlyError(error),'err'); return; }
+      invalidateDate(props.dateStr); await load();
+      showToast('התור בוטל');
+    }
+    return { list, loading, markDone, cancelAppt };
+  },
+  template: `
+  <div class="card">
+    <div class="appt-list" v-if="list.length">
+      <appointment-row v-for="a in list" :key="a.id" :appt="a"
+        @edit="$emit('edit',$event)" @done="markDone" @cancel="cancelAppt" />
+    </div>
+    <div class="empty-state" v-else-if="!loading">
+      <div class="ic">🗓️</div>
+      <strong>אין תורים ליום הזה</strong>
+      <span>לוחצים על "תור חדש" כדי להוסיף את התור הראשון</span>
+    </div>
+    <div class="empty-state" v-else><span>טוענת…</span></div>
+  </div>`
+};
+
+/* ---------------- Today view ---------------- */
+const TodayView = {
+  components: { DayAppointments },
+  props: ['selected'],
+  emits: ['new-appt','edit-appt','update:selected'],
+  setup(props, { emit }){
+    const dateStr = computed(()=> toISODate(props.selected));
+    const label = computed(()=> heDate(props.selected));
+    const isToday = computed(()=> dateStr.value === todayISO());
+    function shift(n){ emit('update:selected', addDays(props.selected, n)); }
+    function goToday(){ emit('update:selected', new Date()); }
+    return { dateStr, label, isToday, shift, goToday };
+  },
+  template: `
+  <div>
+    <div class="week-nav">
+      <button class="icon-btn" @click="shift(-1)">‹</button>
+      <button class="icon-btn" @click="shift(1)">›</button>
+      <button class="btn btn-ghost" style="padding:7px 14px;font-size:13px" v-if="!isToday" @click="goToday">היום</button>
+      <strong style="margin-inline-start:4px">{{ label }}</strong>
+    </div>
+    <day-appointments :date-str="dateStr" @edit="$emit('edit-appt',$event)" />
+  </div>`
+};
+
+/* ---------------- Week view ---------------- */
+const WeekView = {
+  emits: ['open-day'],
+  setup(props, { emit }){
+    const anchor = ref(startOfWeek(new Date()));
+    const days = computed(()=> Array.from({length:7}, (_,i)=> addDays(anchor.value, i)));
+    const todayStr = todayISO();
+    watch(days, (ds)=>{ ds.forEach(d=> ensureDateLoaded(toISODate(d))); }, { immediate:true });
+    function shiftWeek(n){ anchor.value = addDays(anchor.value, n*7); }
+    function hoursFor(d){ return store.businessHours.find(h=>h.day_of_week===d.getDay()); }
+    function countFor(d){ const list = store.byDate[toISODate(d)]; return list ? list.length : null; }
+    return { days, todayStr, shiftWeek, hoursFor, countFor, heDateShort, toISODate, WEEKDAYS };
+  },
+  template: `
+  <div>
+    <div class="week-nav">
+      <button class="icon-btn" @click="shiftWeek(-1)">‹</button>
+      <button class="icon-btn" @click="shiftWeek(1)">›</button>
+      <strong style="margin-inline-start:4px">{{ heDateShort(days[0]) }} – {{ heDateShort(days[6]) }}</strong>
+    </div>
+    <div class="week-grid">
+      <div class="week-day" v-for="d in days" :key="toISODate(d)"
+        :class="{ today: toISODate(d)===todayStr, closed: hoursFor(d) && !hoursFor(d).is_open }"
+        @click="$emit('open-day', d)">
+        <div class="wd-name">{{ WEEKDAYS[d.getDay()] }}</div>
+        <div class="wd-date">{{ d.getDate() }}</div>
+        <div class="wd-count" v-if="countFor(d)!==null">{{ countFor(d) }} תורים</div>
+      </div>
+    </div>
+  </div>`
+};
+
+/* ---------------- New / Edit appointment modal ---------------- */
+const AppointmentModal = {
+  props: ['editing'],
+  emits: ['close','saved'],
+  setup(props, { emit }){
+    const isEdit = computed(()=> !!props.editing);
+    const form = reactive({
+      service_id: props.editing ? props.editing.service_id : (store.services[0]?.id || ''),
+      date: props.editing ? props.editing.appointment_date : todayISO(),
+      start_time: props.editing ? fmtTime(props.editing.start_time) : '10:00',
+      client_name: props.editing ? props.editing.client_name : '',
+      client_phone: props.editing ? props.editing.client_phone : '',
+      notes: props.editing ? (props.editing.notes || '') : '',
+    });
+    const saving = ref(false);
+    const service = computed(()=> store.services.find(s=>s.id===form.service_id));
+    const endTime = computed(()=> service.value ? addMinToTime(form.start_time, service.value.duration_minutes) : form.start_time);
+    const dayHours = computed(()=> store.businessHours.find(h=> h.day_of_week === parseISODate(form.date).getDay()));
+    const outsideHours = computed(()=>{
+      const h = dayHours.value;
+      if (!h) return false;
+      if (!h.is_open) return true;
+      return timeToMin(form.start_time) < timeToMin(h.open_time) || timeToMin(endTime.value) > timeToMin(h.close_time);
+    });
+    const conflict = ref(null);
+
+    async function checkConflict(){
+      await ensureDateLoaded(form.date, true);
+      conflict.value = findConflict(form.date, form.start_time, endTime.value, props.editing ? props.editing.id : null);
+    }
+    watch(()=>[form.date, form.start_time, form.service_id], checkConflict, { immediate:true });
+
+    async function save(){
+      if (!form.service_id || !form.client_name.trim() || !form.client_phone.trim()) {
+        showToast('נא למלא טיפול, שם וטלפון', 'err'); return;
+      }
+      await checkConflict();
+      if (conflict.value){ showToast('יש חפיפה עם תור קיים באותה שעה', 'err'); return; }
+      saving.value = true;
+      const payload = {
+        service_id: form.service_id,
+        appointment_date: form.date,
+        start_time: form.start_time,
+        end_time: endTime.value,
+        client_name: form.client_name.trim(),
+        client_phone: form.client_phone.trim(),
+        notes: form.notes.trim() || null,
+      };
+      try{
+        let error;
+        if (isEdit.value){
+          ({ error } = await supa.from('appointments').update(payload).eq('id', props.editing.id));
+        } else {
+          ({ error } = await supa.from('appointments').insert(payload));
+        }
+        if (error) throw error;
+        invalidateDate(form.date);
+        if (isEdit.value && props.editing.appointment_date !== form.date) invalidateDate(props.editing.appointment_date);
+        showToast(isEdit.value ? 'התור עודכן' : 'התור נקבע בהצלחה');
+        emit('saved');
+      }catch(err){
+        showToast(friendlyError(err), 'err');
+      }finally{
+        saving.value = false;
+      }
+    }
+
+    return { form, isEdit, service, endTime, outsideHours, conflict, saving, save, store };
+  },
+  template: `
+  <div class="overlay" @click.self="$emit('close')">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>{{ isEdit ? 'עריכת תור' : 'תור חדש' }}</h3>
+        <button class="icon-btn" @click="$emit('close')">✕</button>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="f-service">סוג טיפול</label>
+          <select id="f-service" v-model="form.service_id">
+            <option v-for="s in store.services" :key="s.id" :value="s.id">{{ s.name }} · {{ s.duration_minutes }} דק׳</option>
+          </select>
+        </div>
+        <div class="form-row-2">
+          <div class="field">
+            <label for="f-date">תאריך</label>
+            <input id="f-date" type="date" v-model="form.date">
+          </div>
+          <div class="field">
+            <label for="f-time">שעת התחלה</label>
+            <input id="f-time" type="time" v-model="form.start_time">
+          </div>
+        </div>
+        <div class="hint" v-if="service">סיום משוער: {{ endTime }} ({{ service.duration_minutes }} דקות)</div>
+        <div class="conflict-box" v-if="conflict">
+          ⚠️ חופף לתור קיים: {{ conflict.client_name }} ({{ conflict.start_time.slice(0,5) }}–{{ conflict.end_time.slice(0,5) }}). בחרי שעה אחרת.
+        </div>
+        <div class="conflict-box" v-else-if="outsideHours">
+          ⚠️ השעה הזו מחוץ לשעות הפעילות של היום הזה.
+        </div>
+        <div class="form-row-2">
+          <div class="field">
+            <label for="f-name">שם הלקוחה</label>
+            <input id="f-name" type="text" v-model="form.client_name">
+          </div>
+          <div class="field">
+            <label for="f-phone">טלפון</label>
+            <input id="f-phone" type="tel" v-model="form.client_phone" dir="ltr" style="text-align:left">
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-notes">הערות (אופציונלי)</label>
+          <textarea id="f-notes" v-model="form.notes" placeholder="לדוגמה: רגישות לחומר מסוים"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" @click="$emit('close')">ביטול</button>
+        <button class="btn btn-primary" :disabled="saving" @click="save">{{ saving ? 'שומרת…' : 'שמירת תור' }}</button>
+      </div>
+    </div>
+  </div>`
+};
+
+/* ---------------- Services view ---------------- */
+const ServicesView = {
+  setup(){
+    const list = ref([]);
+    const newSvc = reactive({ name:'', duration_minutes:30, price:'' });
+    const adding = ref(false);
+
+    async function load(){ list.value = await loadAllServices(); }
+    onMounted(load);
+
+    async function saveField(svc, field, value){
+      const { error } = await supa.from('services').update({ [field]: value }).eq('id', svc.id);
+      if (error){ showToast(friendlyError(error),'err'); return; }
+      store.services = (await supa.from('services').select('*').eq('active', true).order('sort_order')).data || [];
+    }
+    async function toggleActive(svc){
+      svc.active = !svc.active;
+      await saveField(svc, 'active', svc.active);
+    }
+    async function addService(){
+      if (!newSvc.name.trim() || !newSvc.duration_minutes) { showToast('נא למלא שם ומשך זמן','err'); return; }
+      adding.value = true;
+      const { error } = await supa.from('services').insert({
+        name: newSvc.name.trim(), duration_minutes: Number(newSvc.duration_minutes),
+        price: newSvc.price ? Number(newSvc.price) : null, active:true, sort_order: list.value.length + 1,
+      });
+      adding.value = false;
+      if (error){ showToast(friendlyError(error),'err'); return; }
+      newSvc.name=''; newSvc.duration_minutes=30; newSvc.price='';
+      await load();
+      showToast('הטיפול נוסף');
+    }
+    return { list, newSvc, adding, saveField, toggleActive, addService };
+  },
+  template: `
+  <div class="card">
+    <div style="padding:18px 18px 4px">
+      <p class="section-title">קטלוג הטיפולים</p>
+      <p class="section-sub">משך הזמן כאן נכנס אוטומטית בכל קביעת תור חדש.</p>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="svc-table">
+        <thead><tr><th>טיפול</th><th>משך (דק׳)</th><th>מחיר (₪)</th><th>פעיל</th></tr></thead>
+        <tbody>
+          <tr v-for="s in list" :key="s.id">
+            <td><input type="text" :value="s.name" @change="saveField(s,'name',$event.target.value)"></td>
+            <td><input type="number" min="5" step="5" :value="s.duration_minutes" @change="saveField(s,'duration_minutes',Number($event.target.value))"></td>
+            <td><input type="number" min="0" :value="s.price" @change="saveField(s,'price',Number($event.target.value))"></td>
+            <td><button class="toggle" :class="{on:s.active}" @click="toggleActive(s)"><span class="knob"></span></button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="add-service-row" style="border-top:1px solid var(--border)">
+      <div class="field" style="flex:2;min-width:140px"><label>טיפול חדש</label><input type="text" v-model="newSvc.name"></div>
+      <div class="field" style="width:100px"><label>דקות</label><input type="number" min="5" step="5" v-model="newSvc.duration_minutes"></div>
+      <div class="field" style="width:100px"><label>מחיר ₪</label><input type="number" min="0" v-model="newSvc.price"></div>
+      <button class="btn btn-primary" style="height:42px" :disabled="adding" @click="addService">+ הוספה</button>
+    </div>
+  </div>`
+};
+
+/* ---------------- Settings view ---------------- */
+const SettingsView = {
+  setup(){
+    const name = ref(store.settings?.business_name || '');
+    const email = ref(store.settings?.owner_email || '');
+    const savingInfo = ref(false);
+    const hours = reactive(store.businessHours.map(h=>({...h})));
+    const savingHours = ref(false);
+
+    async function saveInfo(){
+      savingInfo.value = true;
+      const { error } = await supa.from('business_settings')
+        .update({ business_name: name.value.trim(), owner_email: email.value.trim() }).eq('id',1);
+      savingInfo.value = false;
+      if (error){ showToast(friendlyError(error),'err'); return; }
+      store.settings = { ...store.settings, business_name:name.value.trim(), owner_email:email.value.trim() };
+      showToast('הפרטים נשמרו');
+    }
+    async function saveHours(){
+      savingHours.value = true;
+      try{
+        for (const h of hours){
+          const { error } = await supa.from('business_hours')
+            .update({ is_open:h.is_open, open_time:h.open_time, close_time:h.close_time })
+            .eq('day_of_week', h.day_of_week);
+          if (error) throw error;
+        }
+        store.businessHours = hours.map(h=>({...h}));
+        showToast('שעות הפעילות נשמרו');
+      }catch(err){ showToast(friendlyError(err),'err'); }
+      finally{ savingHours.value = false; }
+    }
+    return { name, email, savingInfo, hours, savingHours, saveInfo, saveHours, WEEKDAYS };
+  },
+  template: `
+  <div style="display:flex;flex-direction:column;gap:18px">
+    <div class="card settings-block">
+      <div>
+        <p class="section-title">פרטי העסק</p>
+        <p class="section-sub">כתובת המייל כאן היא היעד לדוח התורים היומי שנשלח כל בוקר ב-07:00.</p>
+      </div>
+      <div class="form-row-2">
+        <div class="field"><label for="s-name">שם העסק</label><input id="s-name" type="text" v-model="name"></div>
+        <div class="field"><label for="s-email">אימייל לקבלת דוח יומי</label><input id="s-email" type="email" v-model="email" dir="ltr" style="text-align:left"></div>
+      </div>
+      <button class="btn btn-primary" style="align-self:flex-start;padding-inline:22px" :disabled="savingInfo" @click="saveInfo">{{ savingInfo?'שומרת…':'שמירה' }}</button>
+    </div>
+    <div class="card settings-block">
+      <div>
+        <p class="section-title">שעות פעילות</p>
+        <p class="section-sub">קובעות באילו ימים אפשר לקבוע תור ובאילו שעות.</p>
+      </div>
+      <div>
+        <div class="hours-row" v-for="h in hours" :key="h.day_of_week">
+          <div class="day-name">{{ WEEKDAYS[h.day_of_week] }}</div>
+          <button class="toggle" :class="{on:h.is_open}" @click="h.is_open=!h.is_open"><span class="knob"></span></button>
+          <template v-if="h.is_open">
+            <input type="time" v-model="h.open_time">
+            <span class="to">עד</span>
+            <input type="time" v-model="h.close_time">
+          </template>
+          <span class="closed-label" v-else>סגור</span>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="align-self:flex-start;padding-inline:22px" :disabled="savingHours" @click="saveHours">{{ savingHours?'שומרת…':'שמירת שעות' }}</button>
+    </div>
+  </div>`
+};
+
+/* ---------------- App shell ---------------- */
+const AppShell = {
+  components: { TodayView, WeekView, ServicesView, SettingsView, AppointmentModal },
+  setup(){
+    const view = ref('today');
+    const selectedDate = ref(new Date());
+    const modalOpen = ref(false);
+    const editingAppt = ref(null);
+
+    function openNew(){ editingAppt.value = null; modalOpen.value = true; }
+    function openEdit(appt){ editingAppt.value = appt; modalOpen.value = true; }
+    function closeModal(){ modalOpen.value = false; editingAppt.value = null; }
+    function onSaved(){ closeModal(); }
+    function openDayFromWeek(d){ selectedDate.value = d; view.value = 'today'; }
+
+    async function logout(){ await supa.auth.signOut(); store.session = null; }
+
+    const titles = { today:'היום', week:'השבוע', services:'הטיפולים שלי', settings:'הגדרות' };
+    const subtitle = computed(()=> view.value==='today' ? heDate(selectedDate.value) : '');
+
+    return { view, selectedDate, modalOpen, editingAppt, openNew, openEdit, closeModal, onSaved, openDayFromWeek, logout, titles, subtitle, store };
+  },
+  template: `
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="mark">G</div><span>Glow Studio</span></div>
+      <button class="nav-item" :class="{active:view==='today'}" @click="view='today'"><span class="ic">🗓️</span>היום</button>
+      <button class="nav-item" :class="{active:view==='week'}" @click="view='week'"><span class="ic">📆</span>השבוע</button>
+      <button class="nav-item" :class="{active:view==='services'}" @click="view='services'"><span class="ic">💅</span>טיפולים</button>
+      <button class="nav-item" :class="{active:view==='settings'}" @click="view='settings'"><span class="ic">⚙️</span>הגדרות</button>
+      <div class="sidebar-footer">
+        <div class="user-email" dir="ltr">{{ store.session?.user?.email }}</div>
+        <button class="nav-item" @click="logout"><span class="ic">↩</span>התנתקות</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <div>
+          <h2>{{ titles[view] }}</h2>
+          <div class="sub" v-if="subtitle">{{ subtitle }}</div>
+        </div>
+      </div>
+      <div class="content">
+        <today-view v-if="view==='today'" :selected="selectedDate" @update:selected="selectedDate=$event" @new-appt="openNew" @edit-appt="openEdit" />
+        <week-view v-else-if="view==='week'" @open-day="openDayFromWeek" />
+        <services-view v-else-if="view==='services'" />
+        <settings-view v-else-if="view==='settings'" />
+      </div>
+    </div>
+
+    <button class="fab" @click="openNew" v-if="view==='today' || view==='week'">+ תור חדש</button>
+
+    <nav class="tabbar">
+      <button :class="{active:view==='today'}" @click="view='today'"><span class="ic">🗓️</span>היום</button>
+      <button :class="{active:view==='week'}" @click="view='week'"><span class="ic">📆</span>השבוע</button>
+      <button :class="{active:view==='services'}" @click="view='services'"><span class="ic">💅</span>טיפולים</button>
+      <button :class="{active:view==='settings'}" @click="view='settings'"><span class="ic">⚙️</span>הגדרות</button>
+    </nav>
+
+    <appointment-modal v-if="modalOpen" :editing="editingAppt" @close="closeModal" @saved="onSaved" />
+  </div>`
+};
+
+/* ---------------- Root ---------------- */
+const Root = {
+  components: { LoginView, AppShell },
+  setup(){
+    const checkingSession = ref(true);
+
+    onMounted(async ()=>{
+      if (supa){
+        const { data } = await supa.auth.getSession();
+        store.session = data.session;
+        supa.auth.onAuthStateChange((_event, session)=>{ store.session = session; });
+        if (store.session) await loadStaticData();
+      }
+      checkingSession.value = false;
+    });
+
+    watch(()=>store.session, async (s)=>{ if (s) await loadStaticData(); });
+
+    return { checkingSession, store, toast };
+  },
+  template: `
+  <div v-if="checkingSession"></div>
+  <login-view v-else-if="!store.session" />
+  <div v-else-if="store.bootError" class="login-screen">
+    <div class="login-card">
+      <div class="login-error">{{ store.bootError }}</div>
+      <p class="hint">נסי לרענן את הדף בעוד רגע.</p>
+    </div>
+  </div>
+  <app-shell v-else />
+  <div class="toast" :class="toast.type==='err'?'err':'ok'" v-if="toast.show">{{ toast.msg }}</div>`
+};
+
+createApp(Root).mount('#app');
+</script>
