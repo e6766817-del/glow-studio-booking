@@ -603,35 +603,66 @@ const AppointmentModal = {
     const form = reactive({
       service_id: props.editing ? props.editing.service_id : (store.services[0]?.id || ''),
       date: props.editing ? props.editing.appointment_date : todayISO(),
-      start_time: props.editing ? fmtTime(props.editing.start_time) : '10:00',
+      start_time: props.editing ? fmtTime(props.editing.start_time) : '',
       client_name: props.editing ? props.editing.client_name : '',
       client_phone: props.editing ? props.editing.client_phone : '',
       notes: props.editing ? (props.editing.notes || '') : '',
     });
     const saving = ref(false);
+    const loadingSlots = ref(false);
     const service = computed(()=> store.services.find(s=>s.id===form.service_id));
-    const endTime = computed(()=> service.value ? addMinToTime(form.start_time, service.value.duration_minutes) : form.start_time);
+    const endTime = computed(()=> service.value && form.start_time ? addMinToTime(form.start_time, service.value.duration_minutes) : '');
     const dayHours = computed(()=> store.businessHours.find(h=> h.day_of_week === parseISODate(form.date).getDay()));
-    const outsideHours = computed(()=>{
-      const h = dayHours.value;
-      if (!h) return false;
-      if (!h.is_open) return true;
-      return timeToMin(form.start_time) < timeToMin(h.open_time) || timeToMin(endTime.value) > timeToMin(h.close_time);
-    });
-    const conflict = ref(null);
 
-    async function checkConflict(){
+    // appointments on the chosen date that count as "taken" -- excludes the appointment
+    // being edited, so its own current slot stays selectable.
+    const busyList = computed(()=> (store.byDate[form.date] || [])
+      .filter(a => a.status !== 'cancelled' && (!props.editing || a.id !== props.editing.id)));
+
+    // every start time, in 5-minute steps, where the selected service fits inside business
+    // hours without overlapping an existing appointment -- the only times shown to pick from.
+    const availableSlots = computed(()=>{
+      const dur = service.value?.duration_minutes;
+      const hours = dayHours.value;
+      if (!dur || !hours || !hours.is_open) return [];
+      const openMin = timeToMin(hours.open_time), closeMin = timeToMin(hours.close_time);
+      const busy = busyList.value;
+      const slots = [];
+      for (let t = openMin; t + dur <= closeMin; t += 5){
+        const end = t + dur;
+        if (!busy.some(a => t < timeToMin(a.end_time) && end > timeToMin(a.start_time))) slots.push(minToTime(t));
+      }
+      return slots;
+    });
+
+    // default pick: 5 minutes after the last appointment of the day ends, snapped to the
+    // nearest free slot at or after that -- otherwise the day's first free slot.
+    const suggestedStart = computed(()=>{
+      const slots = availableSlots.value;
+      if (!slots.length) return '';
+      const hours = dayHours.value;
+      const busy = busyList.value;
+      let candidate = timeToMin(hours.open_time);
+      if (busy.length) candidate = Math.max(candidate, Math.max(...busy.map(a => timeToMin(a.end_time))) + 5);
+      return slots.find(s => timeToMin(s) >= candidate) || slots[0];
+    });
+
+    async function refreshAvailability(){
+      loadingSlots.value = true;
       await ensureDateLoaded(form.date, true);
-      conflict.value = findConflict(form.date, form.start_time, endTime.value, props.editing ? props.editing.id : null);
+      loadingSlots.value = false;
+      if (!availableSlots.value.includes(form.start_time)) form.start_time = suggestedStart.value;
     }
-    watch(()=>[form.date, form.start_time, form.service_id], checkConflict, { immediate:true });
+    watch(()=>[form.date, form.service_id], refreshAvailability, { immediate:true });
 
     async function save(){
-      if (!form.service_id || !form.client_name.trim() || !form.client_phone.trim()) {
-        showToast('נא למלא טיפול, שם וטלפון', 'err'); return;
+      if (!form.service_id || !form.start_time || !form.client_name.trim() || !form.client_phone.trim()) {
+        showToast('נא לבחור שעה פנויה ולמלא שם וטלפון', 'err'); return;
       }
-      await checkConflict();
-      if (conflict.value){ showToast('יש חפיפה עם תור קיים באותה שעה', 'err'); return; }
+      // last-moment safety net in case another booking landed while this modal was open
+      await ensureDateLoaded(form.date, true);
+      const conflict = findConflict(form.date, form.start_time, endTime.value, props.editing ? props.editing.id : null);
+      if (conflict){ showToast('השעה הזו נתפסה הרגע על ידי תור אחר, בחרי שעה אחרת', 'err'); await refreshAvailability(); return; }
       saving.value = true;
       const payload = {
         service_id: form.service_id,
@@ -661,7 +692,7 @@ const AppointmentModal = {
       }
     }
 
-    return { form, isEdit, service, endTime, outsideHours, conflict, saving, save, store };
+    return { form, isEdit, service, endTime, availableSlots, loadingSlots, saving, save, store };
   },
   template: `
   <div class="overlay" @click.self="$emit('close')">
@@ -684,15 +715,16 @@ const AppointmentModal = {
           </div>
           <div class="field">
             <label for="f-time">שעת התחלה</label>
-            <input id="f-time" type="time" v-model="form.start_time">
+            <select id="f-time" v-model="form.start_time" :disabled="loadingSlots || !availableSlots.length">
+              <option v-if="loadingSlots" value="">טוענת שעות פנויות…</option>
+              <option v-else-if="!availableSlots.length" value="">אין שעות פנויות</option>
+              <option v-for="t in availableSlots" :key="t" :value="t">{{ t }}</option>
+            </select>
           </div>
         </div>
-        <div class="hint" v-if="service">סיום משוער: {{ endTime }} ({{ service.duration_minutes }} דקות)</div>
-        <div class="conflict-box" v-if="conflict">
-          ⚠️ חופף לתור קיים: {{ conflict.client_name }} ({{ conflict.start_time.slice(0,5) }}–{{ conflict.end_time.slice(0,5) }}). בחרי שעה אחרת.
-        </div>
-        <div class="conflict-box" v-else-if="outsideHours">
-          ⚠️ השעה הזו מחוץ לשעות הפעילות של היום הזה.
+        <div class="hint" v-if="service && form.start_time">סיום משוער: {{ endTime }} ({{ service.duration_minutes }} דקות)</div>
+        <div class="conflict-box" v-if="!loadingSlots && !availableSlots.length">
+          ⚠️ אין שעות פנויות ביום הזה לטיפול שנבחר. נסי תאריך אחר או טיפול קצר יותר.
         </div>
         <div class="form-row-2">
           <div class="field">
