@@ -76,7 +76,30 @@ function buildEmailHtml(opts: {
   </div>`;
 }
 
-Deno.serve(async () => {
+// Accepts calls from pg_cron (service_role key) and from the logged-in
+// esthetician (her own user JWT, sent automatically by supabase-js). Rejects
+// everything else, so the public anon key alone can't trigger an email send.
+function callerRole(authHeader: string | null): string | null {
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  const parts = authHeader.slice(7).split(".");
+  if (parts.length !== 3) return null;
+  try {
+    const json = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(json).role ?? null;
+  } catch {
+    return null;
+  }
+}
+
+Deno.serve(async (req) => {
+  const role = callerRole(req.headers.get("Authorization"));
+  if (role !== "authenticated" && role !== "service_role") {
+    return new Response(JSON.stringify({ ok: false, error: "unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 

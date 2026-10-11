@@ -847,6 +847,21 @@ const SettingsView = {
     const savingInfo = ref(false);
     const hours = reactive(store.businessHours.map(h=>({...h})));
     const savingHours = ref(false);
+    const sendingReport = ref(false);
+
+    async function sendReportNow(){
+      sendingReport.value = true;
+      try{
+        const { data, error } = await supa.functions.invoke('daily-schedule-email', { method:'POST' });
+        if (error) throw error;
+        if (data && data.ok === false) throw new Error(data.error || 'שליחת הדוח נכשלה');
+        showToast(`הדוח של היום נשלח בהצלחה (${data?.count ?? 0} תורים)`);
+      }catch(err){
+        showToast(friendlyError(err), 'err');
+      }finally{
+        sendingReport.value = false;
+      }
+    }
 
     async function saveInfo(){
       savingInfo.value = true;
@@ -871,7 +886,7 @@ const SettingsView = {
       }catch(err){ showToast(friendlyError(err),'err'); }
       finally{ savingHours.value = false; }
     }
-    return { name, email, savingInfo, hours, savingHours, saveInfo, saveHours, WEEKDAYS };
+    return { name, email, savingInfo, hours, savingHours, sendingReport, saveInfo, saveHours, sendReportNow, WEEKDAYS };
   },
   template: `
   <div style="display:flex;flex-direction:column;gap:18px">
@@ -885,6 +900,15 @@ const SettingsView = {
         <div class="field"><label for="s-email">אימייל לקבלת דוח יומי</label><input id="s-email" type="email" v-model="email" dir="ltr" style="text-align:left"></div>
       </div>
       <button class="btn btn-primary" style="align-self:flex-start;padding-inline:22px" :disabled="savingInfo" @click="saveInfo">{{ savingInfo?'שומרת…':'שמירה' }}</button>
+    </div>
+    <div class="card settings-block">
+      <div>
+        <p class="section-title">דוח יומי</p>
+        <p class="section-sub">לא רוצה לחכות ל-07:00? אפשר לשלוח את דוח התורים של היום לאימייל שלמעלה עכשיו.</p>
+      </div>
+      <button class="btn btn-ghost" style="align-self:flex-start;padding-inline:22px" :disabled="sendingReport" @click="sendReportNow">
+        <icon name="calendar" size="16"/>{{ sendingReport?'שולחת…':'שליחת הדוח של היום עכשיו' }}
+      </button>
     </div>
     <div class="card settings-block">
       <div>
