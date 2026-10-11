@@ -89,7 +89,7 @@
   .field{display:flex; flex-direction:column; gap:6px; margin-bottom:16px;}
   .field label{font-size:12.5px; color:var(--text-soft); font-weight:600;}
   .field input{
-    border:1px solid var(--border); border-radius:10px; padding:11px 13px; font-size:15px;
+    height:44px; border:1px solid var(--border); border-radius:10px; padding:0 13px; font-size:15px;
     background:var(--bg); color:var(--text); outline:none; transition:border-color .15s;
   }
   .field input:focus{border-color:var(--accent);}
@@ -222,6 +222,7 @@
   .modal-head .icon-btn{border:none;}
   .form-grid{display:flex; flex-direction:column; gap:14px;}
   .form-row-2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .form-row-2--with-btn{grid-template-columns:1fr 1fr auto; align-items:end;}
   .field select, .field textarea{
     border:1px solid var(--border); border-radius:10px; padding:11px 13px; font-size:14.5px;
     background:var(--bg); color:var(--text); outline:none; font-family:inherit;
@@ -293,6 +294,7 @@
     .content{padding:4px 16px 92px;}
     .topbar{padding:18px 16px 10px;}
     .form-row-2{grid-template-columns:1fr;}
+    .form-row-2--with-btn{grid-template-columns:1fr; align-items:stretch;}
     .week-grid{grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px;}
     .week-day{min-height:84px; padding:8px 4px;}
     .week-day .wd-date{font-size:14px;}
@@ -895,11 +897,11 @@ const SettingsView = {
         <p class="section-title">פרטי העסק</p>
         <p class="section-sub">כתובת המייל כאן היא היעד לדוח התורים היומי שנשלח כל בוקר ב-07:00.</p>
       </div>
-      <div class="form-row-2">
-        <div class="field"><label for="s-name">שם העסק</label><input id="s-name" type="text" v-model="name"></div>
-        <div class="field"><label for="s-email">אימייל לקבלת דוח יומי</label><input id="s-email" type="email" v-model="email" dir="ltr" style="text-align:left"></div>
+      <div class="form-row-2 form-row-2--with-btn">
+        <div class="field" style="margin-bottom:0"><label for="s-name">שם העסק</label><input id="s-name" type="text" v-model="name"></div>
+        <div class="field" style="margin-bottom:0"><label for="s-email">אימייל לקבלת דוח יומי</label><input id="s-email" type="email" v-model="email" dir="ltr" style="text-align:left"></div>
+        <button class="btn btn-primary" style="height:44px; padding-block:0; white-space:nowrap; justify-self:start" :disabled="savingInfo" @click="saveInfo">{{ savingInfo?'שומרת…':'שמירה' }}</button>
       </div>
-      <button class="btn btn-primary" style="align-self:flex-start;padding-inline:22px" :disabled="savingInfo" @click="saveInfo">{{ savingInfo?'שומרת…':'שמירה' }}</button>
     </div>
     <div class="card settings-block">
       <div>
