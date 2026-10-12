@@ -1,478 +1,1409 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- Glow Studio -- appointment scheduler for a solo esthetician -->
 <title>Glow Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@400;500;600;700&display=swap"
+  rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/vue@3.4.21/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
 
 <style>
   /* Layout concept: fixed side nav (desktop) / bottom tab bar (phone), content column
      of cards over a soft warm surface; a single floating action button starts a booking. */
-  :root{
-    --bg:#fbf4f2;
-    --surface:#ffffff;
-    --surface-alt:#fdf0ee;
-    --border:#f0dcd8;
-    --text:#2c2222;
-    --text-soft:#8a7877;
-    --accent:#b5466f;
-    --accent-dark:#8a3455;
-    --accent-soft:#f7e3ec;
-    --success:#3f8f5f;
-    --success-soft:#e5f3e9;
-    --danger:#c0473f;
-    --danger-soft:#fbe9e7;
-    --warning:#b1792c;
-    --warning-soft:#faf0df;
-    --shadow: 0 1px 2px rgba(44,34,34,.04), 0 8px 24px -12px rgba(44,34,34,.18);
-    --font-display:'Frank Ruhl Libre', Georgia, 'Times New Roman', serif;
-    --font-body:'Heebo', Arial, sans-serif;
+  :root {
+    --bg: #fbf4f2;
+    --surface: #ffffff;
+    --surface-alt: #fdf0ee;
+    --border: #f0dcd8;
+    --text: #2c2222;
+    --text-soft: #8a7877;
+    --accent: #b5466f;
+    --accent-dark: #8a3455;
+    --accent-soft: #f7e3ec;
+    --success: #3f8f5f;
+    --success-soft: #e5f3e9;
+    --danger: #c0473f;
+    --danger-soft: #fbe9e7;
+    --warning: #b1792c;
+    --warning-soft: #faf0df;
+    --shadow: 0 1px 2px rgba(44, 34, 34, .04), 0 8px 24px -12px rgba(44, 34, 34, .18);
+    --font-display: 'Frank Ruhl Libre', Georgia, 'Times New Roman', serif;
+    --font-body: 'Heebo', Arial, sans-serif;
     color-scheme: light;
   }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#211a1a; --surface:#2a2222; --surface-alt:#332828; --border:#443535;
-      --text:#f3e9e7; --text-soft:#b7a4a2;
-      --accent:#e487ac; --accent-dark:#f0a9c4; --accent-soft:#3a2630;
-      --success:#7bc999; --success-soft:#20332a;
-      --danger:#e2847c; --danger-soft:#3a2524;
-      --warning:#dcae6b; --warning-soft:#392e1e;
-      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #211a1a;
+      --surface: #2a2222;
+      --surface-alt: #332828;
+      --border: #443535;
+      --text: #f3e9e7;
+      --text-soft: #b7a4a2;
+      --accent: #e487ac;
+      --accent-dark: #f0a9c4;
+      --accent-soft: #3a2630;
+      --success: #7bc999;
+      --success-soft: #20332a;
+      --danger: #e2847c;
+      --danger-soft: #3a2524;
+      --warning: #dcae6b;
+      --warning-soft: #392e1e;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .5);
       color-scheme: dark;
     }
   }
-  :root[data-theme="dark"]{
-    --bg:#211a1a; --surface:#2a2222; --surface-alt:#332828; --border:#443535;
-    --text:#f3e9e7; --text-soft:#b7a4a2;
-    --accent:#e487ac; --accent-dark:#f0a9c4; --accent-soft:#3a2630;
-    --success:#7bc999; --success-soft:#20332a;
-    --danger:#e2847c; --danger-soft:#3a2524;
-    --warning:#dcae6b; --warning-soft:#392e1e;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+
+  :root[data-theme="dark"] {
+    --bg: #211a1a;
+    --surface: #2a2222;
+    --surface-alt: #332828;
+    --border: #443535;
+    --text: #f3e9e7;
+    --text-soft: #b7a4a2;
+    --accent: #e487ac;
+    --accent-dark: #f0a9c4;
+    --accent-soft: #3a2630;
+    --success: #7bc999;
+    --success-soft: #20332a;
+    --danger: #e2847c;
+    --danger-soft: #3a2524;
+    --warning: #dcae6b;
+    --warning-soft: #392e1e;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .5);
     color-scheme: dark;
   }
 
-  *{box-sizing:border-box;}
-  body{
-    background:var(--bg); color:var(--text);
-    font-family:var(--font-body); direction:rtl;
-    min-height:100%;
+  * {
+    box-sizing: border-box;
   }
-  html,body{height:100%;}
-  h1,h2,h3,.brand{font-family:var(--font-display);}
-  button,input,select,textarea{font-family:inherit; color:inherit;}
-  a{color:var(--accent);}
-  ::selection{background:var(--accent-soft); color:var(--accent-dark);}
 
-  #app{min-height:100%; display:flex; flex-direction:column;}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    direction: rtl;
+    min-height: 100%;
+  }
+
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  h1,
+  h2,
+  h3,
+  .brand {
+    font-family: var(--font-display);
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+    color: inherit;
+  }
+
+  a {
+    color: var(--accent);
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+  }
+
+  #app {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
 
   /* ---------- Login ---------- */
-  .login-screen{
-    min-height:100%; display:flex; align-items:center; justify-content:center;
-    padding:32px 16px; background:
+  .login-screen {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    background:
       radial-gradient(60% 50% at 85% 10%, var(--accent-soft), transparent 60%),
       var(--bg);
   }
-  .login-card{
-    width:100%; max-width:380px; background:var(--surface); border:1px solid var(--border);
-    border-radius:20px; padding:36px 28px; box-shadow:var(--shadow);
+
+  .login-card {
+    width: 100%;
+    max-width: 380px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 28px;
+    box-shadow: var(--shadow);
   }
-  .login-brand{text-align:center; margin-bottom:28px;}
-  .login-brand .mark{
-    width:52px; height:52px; border-radius:50%; margin:0 auto 14px; display:flex;
-    align-items:center; justify-content:center; background:var(--accent-soft); color:var(--accent-dark);
-    font-family:var(--font-display); font-size:22px; font-weight:700;
+
+  .login-brand {
+    text-align: center;
+    margin-bottom: 28px;
   }
-  .login-brand h1{font-size:22px; margin:0 0 4px; font-weight:700;}
-  .login-brand p{margin:0; color:var(--text-soft); font-size:13.5px;}
-  .field{display:flex; flex-direction:column; gap:6px; margin-bottom:16px;}
-  .field label{font-size:12.5px; color:var(--text-soft); font-weight:600;}
-  .field input{
-    height:44px; border:1px solid var(--border); border-radius:10px; padding:0 13px; font-size:15px;
-    background:var(--bg); color:var(--text); outline:none; transition:border-color .15s;
+
+  .login-brand .mark {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    margin: 0 auto 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
   }
-  .field input:focus{border-color:var(--accent);}
-  .btn{
-    border:none; border-radius:10px; padding:12px 18px; font-size:15px; font-weight:600;
-    cursor:pointer; transition:transform .08s, opacity .15s; display:inline-flex; align-items:center;
-    justify-content:center; gap:8px; white-space:nowrap;
+
+  .login-brand h1 {
+    font-size: 22px;
+    margin: 0 0 4px;
+    font-weight: 700;
   }
-  .btn:active{transform:scale(.98);}
-  .btn:disabled{opacity:.55; cursor:not-allowed;}
-  .btn-primary{background:var(--accent); color:#fff; width:100%;}
-  .btn-primary:hover:not(:disabled){background:var(--accent-dark);}
-  .btn-ghost{background:transparent; color:var(--text); border:1px solid var(--border);}
-  .btn-ghost:hover{background:var(--surface-alt);}
-  .btn-danger-text{background:transparent; color:var(--danger); padding:8px 10px;}
-  .login-error{
-    background:var(--danger-soft); color:var(--danger); border-radius:10px; padding:10px 12px;
-    font-size:13px; margin-bottom:14px;
+
+  .login-brand p {
+    margin: 0;
+    color: var(--text-soft);
+    font-size: 13.5px;
   }
-  .login-hint{margin-top:18px; text-align:center; font-size:12px; color:var(--text-soft); line-height:1.6;}
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .field label {
+    font-size: 12.5px;
+    color: var(--text-soft);
+    font-weight: 600;
+  }
+
+  .field input {
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0 13px;
+    font-size: 15px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+  }
+
+  .field input:focus {
+    border-color: var(--accent);
+  }
+
+  .btn {
+    border: none;
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .08s, opacity .15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .btn:active {
+    transform: scale(.98);
+  }
+
+  .btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-block {
+    width: 100%;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-dark);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover {
+    background: var(--surface-alt);
+  }
+
+  .btn-danger-text {
+    background: transparent;
+    color: var(--danger);
+    padding: 8px 10px;
+  }
+
+  .login-error {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+
+  .login-hint {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-soft);
+    line-height: 1.6;
+  }
 
   /* ---------- Shell ---------- */
-  .shell{display:flex; flex:1; min-height:100%;}
-  .sidebar{
-    width:224px; flex-shrink:0; background:var(--surface); border-inline-start:1px solid var(--border);
-    display:flex; flex-direction:column; padding:20px 14px; gap:4px;
+  /* Nothing scrolls at the page level: the shell owns exactly one viewport
+     height, and .content is the only region allowed to scroll inside it. */
+  .shell {
+    display: flex;
+    flex: 1;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
   }
-  .sidebar .brand{display:flex; align-items:center; gap:10px; padding:4px 8px 22px;}
-  .sidebar .brand .mark{
-    width:34px; height:34px; border-radius:50%; background:var(--accent-soft); color:var(--accent-dark);
-    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; flex-shrink:0;
-  }
-  .sidebar .brand span{font-weight:700; font-size:16.5px;}
-  .nav-item{
-    display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:10px; cursor:pointer;
-    color:var(--text-soft); font-size:14.5px; font-weight:600; border:none; background:none; text-align:right;
-    width:100%;
-  }
-  .nav-item .ic{display:inline-flex; flex-shrink:0;}
-  .nav-item:hover{background:var(--surface-alt); color:var(--text);}
-  .nav-item.active{background:var(--accent-soft); color:var(--accent-dark);}
-  .sidebar-footer{margin-top:auto; padding-top:14px; border-top:1px solid var(--border);}
-  .sidebar-footer .user-email{font-size:11.5px; color:var(--text-soft); padding:0 12px 8px; word-break:break-all;}
 
-  .main{flex:1; min-width:0; display:flex; flex-direction:column;}
-  .topbar{
-    position:sticky; top:env(safe-area-inset-top,0px); z-index:10; background:var(--bg);
-    padding:20px 24px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px;
-    border-bottom:1px solid transparent;
+  .sidebar {
+    height: 100%;
+    width: 224px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-inline-start: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 14px;
+    gap: 4px;
   }
-  .topbar h2{font-size:21px; margin:0; font-weight:700;}
-  .topbar .sub{font-size:13px; color:var(--text-soft); margin-top:2px;}
-  .content{padding:4px 24px 100px; flex:1;}
+
+  .sidebar .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px 22px;
+  }
+
+  .sidebar .brand .mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .sidebar .brand span {
+    font-weight: 700;
+    font-size: 16.5px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--text-soft);
+    font-size: 14.5px;
+    font-weight: 600;
+    border: none;
+    background: none;
+    text-align: right;
+    width: 100%;
+  }
+
+  .nav-item .ic {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  .nav-item:hover {
+    background: var(--surface-alt);
+    color: var(--text);
+  }
+
+  .nav-item.active {
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .sidebar-footer .user-email {
+    font-size: 11.5px;
+    color: var(--text-soft);
+    padding: 0 12px 8px;
+    word-break: break-all;
+  }
+
+  .main {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    position: relative;
+    z-index: 10;
+    flex-shrink: 0;
+    background: var(--bg);
+    padding: 20px 24px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid transparent;
+  }
+
+  .topbar h2 {
+    font-size: 21px;
+    margin: 0;
+    font-weight: 700;
+  }
+
+  .topbar .sub {
+    font-size: 13px;
+    color: var(--text-soft);
+    margin-top: 2px;
+  }
+
+  .content {
+    padding: 4px 24px 24px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* only the views with the floating button keep room for it */
+  .content.has-fab {
+    padding-bottom: 86px;
+  }
 
   /* ---------- Cards / lists ---------- */
-  .card{background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow);}
-  .empty-state{
-    text-align:center; padding:52px 20px; color:var(--text-soft); display:flex; flex-direction:column;
-    align-items:center; gap:10px;
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
   }
-  .empty-state .ic{display:inline-flex;}
-  .empty-state strong{color:var(--text); font-size:15px;}
 
-  .appt-list{display:flex; flex-direction:column;}
-  .appt-row{
-    display:flex; align-items:center; gap:16px; padding:16px 18px; border-bottom:1px solid var(--border);
+  .empty-state {
+    text-align: center;
+    padding: 52px 20px;
+    color: var(--text-soft);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
   }
-  .appt-row:last-child{border-bottom:none;}
-  .appt-time{
-    width:92px; flex-shrink:0; font-weight:700; font-size:14.5px; font-variant-numeric:tabular-nums;
-    color:var(--accent-dark);
-  }
-  .appt-time .dur{display:block; font-weight:400; font-size:11.5px; color:var(--text-soft); margin-top:2px;}
-  .appt-main{flex:1; min-width:0;}
-  .appt-main .client{font-weight:700; font-size:15px;}
-  .appt-main .service{color:var(--text-soft); font-size:13px; margin-top:2px;}
-  .appt-main .notes{color:var(--text-soft); font-size:12px; margin-top:4px; font-style:italic;}
-  .appt-phone{font-size:12.5px; color:var(--text-soft); font-variant-numeric:tabular-nums; white-space:nowrap;}
-  .appt-actions{display:flex; gap:6px; flex-shrink:0;}
-  .icon-btn{
-    border:1px solid var(--border); background:var(--surface); border-radius:8px; width:32px; height:32px;
-    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; color:var(--text-soft);
-  }
-  .icon-btn:hover{background:var(--surface-alt); color:var(--text);}
-  .badge{
-    font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap;
-  }
-  .badge-done{background:var(--success-soft); color:var(--success);}
-  .badge-cancelled{background:var(--danger-soft); color:var(--danger); text-decoration:line-through;}
 
-  .fab{
-    position:fixed; bottom:calc(24px + env(safe-area-inset-bottom,0px)); left:28px; z-index:20;
-    background:var(--accent); color:#fff; border:none; border-radius:999px; padding:15px 22px;
-    font-size:15px; font-weight:700; box-shadow:0 10px 28px -8px rgba(181,70,111,.55); cursor:pointer;
-    display:flex; align-items:center; gap:8px;
+  .empty-state .ic {
+    display: inline-flex;
   }
-  .fab:hover{background:var(--accent-dark);}
 
-  /* ---------- Week view ---------- */
-  .week-nav{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
-  .week-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:10px;}
-  .week-day{
-    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 10px;
-    cursor:pointer; min-height:108px; display:flex; flex-direction:column; gap:8px;
+  .empty-state strong {
+    color: var(--text);
+    font-size: 15px;
   }
-  .week-day:hover{border-color:var(--accent);}
-  .week-day.today{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset;}
-  .week-day .wd-name{font-size:12px; color:var(--text-soft); font-weight:600;}
-  .week-day .wd-date{font-size:17px; font-weight:700;}
-  .week-day .wd-count{
-    margin-top:auto; font-size:11.5px; font-weight:700; color:var(--accent-dark); background:var(--accent-soft);
-    border-radius:999px; padding:3px 9px; align-self:flex-start;
+
+  .appt-list {
+    display: flex;
+    flex-direction: column;
   }
-  .week-day.closed{opacity:.5;}
+
+  .appt-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .appt-row:last-child {
+    border-bottom: none;
+  }
+
+  .appt-time {
+    width: 92px;
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: 14.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-dark);
+  }
+
+  .appt-time .dur {
+    display: block;
+    font-weight: 400;
+    font-size: 11.5px;
+    color: var(--text-soft);
+    margin-top: 2px;
+  }
+
+  .appt-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .appt-main .client {
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .appt-main .service {
+    color: var(--text-soft);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+
+  .appt-main .notes {
+    color: var(--text-soft);
+    font-size: 12px;
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .appt-phone {
+    font-size: 12.5px;
+    color: var(--text-soft);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .appt-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-soft);
+  }
+
+  .icon-btn:hover {
+    background: var(--surface-alt);
+    color: var(--text);
+  }
+
+  .badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .badge-done {
+    background: var(--success-soft);
+    color: var(--success);
+  }
+
+  .badge-cancelled {
+    background: var(--danger-soft);
+    color: var(--danger);
+    text-decoration: line-through;
+  }
+
+  .fab {
+    position: fixed;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    left: 28px;
+    z-index: 20;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 15px 22px;
+    font-size: 15px;
+    font-weight: 700;
+    box-shadow: 0 10px 28px -8px rgba(181, 70, 111, .55);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .fab:hover {
+    background: var(--accent-dark);
+  }
+
+  /* ---------- Month calendar ---------- */
+  /* shared by the day view and the month view */
+  .view-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-shrink: 0;
+  }
+
+  /* the calendar fills whatever height is left instead of scrolling */
+  .month-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .month-view .view-nav {
+    margin-bottom: 2px;
+  }
+
+  .month-head {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .month-head span {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text-soft);
+    text-align: center;
+  }
+
+  .month-grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .month-day {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 8px 9px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-height: 0;
+    overflow: hidden;
+    text-align: start;
+    font-family: inherit;
+    color: inherit;
+  }
+
+  .month-day:hover {
+    border-color: var(--accent);
+  }
+
+  .month-day .md-date {
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .month-day .md-count {
+    margin-top: auto;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-dark);
+    background: var(--accent-soft);
+    border-radius: 999px;
+    padding: 2px 8px;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .month-day.closed {
+    background: transparent;
+    border-style: dashed;
+  }
+
+  .month-day.closed .md-date {
+    color: var(--text-soft);
+    font-weight: 600;
+  }
+
+  .month-day.other {
+    opacity: .42;
+  }
+
+  .month-day.today {
+    border-color: var(--accent);
+  }
+
+  .month-day.today .md-date {
+    color: var(--accent-dark);
+  }
+
+  .month-day.sel {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent) inset;
+  }
 
   /* ---------- Forms (modal + settings) ---------- */
-  .overlay{
-    position:fixed; inset:0; background:rgba(30,20,20,.42); display:flex; align-items:flex-end;
-    justify-content:center; z-index:50; padding:0;
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 20, 20, .42);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 50;
+    padding: 0;
   }
-  @media (min-width:640px){ .overlay{align-items:center; padding:24px;} }
-  .modal{
-    background:var(--surface); width:100%; max-width:480px; max-height:92vh; overflow-y:auto;
-    border-radius:20px 20px 0 0; padding:24px 22px calc(24px + env(safe-area-inset-bottom,0px));
-    box-shadow:var(--shadow);
+
+  @media (min-width:640px) {
+    .overlay {
+      align-items: center;
+      padding: 24px;
+    }
   }
-  @media (min-width:640px){ .modal{border-radius:20px;} }
-  .modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
-  .modal-head h3{margin:0; font-size:18px;}
-  .modal-head .icon-btn{border:none;}
-  .form-grid{display:flex; flex-direction:column; gap:14px;}
-  .form-row-2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
-  .form-row-2--with-btn{grid-template-columns:1fr 1fr auto; align-items:end;}
-  .field select, .field textarea{
-    border:1px solid var(--border); border-radius:10px; padding:11px 13px; font-size:14.5px;
-    background:var(--bg); color:var(--text); outline:none; font-family:inherit;
+
+  .modal {
+    background: var(--surface);
+    width: 100%;
+    max-width: 480px;
+    max-height: 92vh;
+    overflow-y: auto;
+    border-radius: 20px 20px 0 0;
+    padding: 24px 22px calc(24px + env(safe-area-inset-bottom, 0px));
+    box-shadow: var(--shadow);
   }
-  .field select:focus, .field textarea:focus{border-color:var(--accent);}
-  .field textarea{resize:vertical; min-height:60px;}
-  .hint{font-size:12px; color:var(--text-soft);}
-  .conflict-box{
-    background:var(--danger-soft); color:var(--danger); border-radius:10px; padding:11px 13px; font-size:13px;
-    line-height:1.6; display:flex; align-items:flex-start; gap:8px;
+
+  @media (min-width:640px) {
+    .modal {
+      border-radius: 20px;
+    }
   }
-  .conflict-box svg{flex-shrink:0; margin-top:2px;}
-  .modal-actions{display:flex; gap:10px; margin-top:20px;}
-  .modal-actions .btn{flex:1;}
+
+  .modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  .modal-head h3 {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  .modal-head .icon-btn {
+    border: none;
+  }
+
+  .form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .form-row-2--with-btn {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) auto;
+    align-items: end;
+  }
+
+  /* the action button hugs its label instead of filling the row */
+  .form-row-2--with-btn > .btn {
+    justify-self: start;
+  }
+
+  .field select,
+  .field textarea {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-size: 14.5px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    font-family: inherit;
+  }
+
+  .field select:focus,
+  .field textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .field textarea {
+    resize: vertical;
+    min-height: 60px;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: var(--text-soft);
+  }
+
+  .conflict-box {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-size: 13px;
+    line-height: 1.6;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .conflict-box svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .modal-actions .btn {
+    flex: 1;
+  }
 
   /* ---------- Services & settings ---------- */
-  .svc-table{width:100%; border-collapse:collapse;}
-  .svc-table th{
-    text-align:right; font-size:11.5px; color:var(--text-soft); font-weight:700; padding:0 18px 10px;
-    text-transform:uppercase; letter-spacing:.03em;
+  .svc-table {
+    width: 100%;
+    border-collapse: collapse;
   }
-  .svc-table td{padding:12px 18px; border-top:1px solid var(--border); font-size:14px; vertical-align:middle;}
-  .svc-table input[type=text], .svc-table input[type=number]{
-    border:1px solid transparent; background:transparent; border-radius:8px; padding:6px 8px; font-size:14px;
-    color:var(--text); width:100%; font-family:inherit;
+
+  .svc-table th {
+    text-align: right;
+    font-size: 11.5px;
+    color: var(--text-soft);
+    font-weight: 700;
+    padding: 0 18px 10px;
+    text-transform: uppercase;
+    letter-spacing: .03em;
   }
-  .svc-table input:hover, .svc-table input:focus{border-color:var(--border); background:var(--bg);}
-  .svc-table input[type=number]{width:70px; font-variant-numeric:tabular-nums;}
-  .toggle{
-    width:38px; height:22px; border-radius:999px; background:var(--border); position:relative; cursor:pointer;
-    flex-shrink:0; border:none; padding:0;
+
+  .svc-table td {
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    vertical-align: middle;
   }
-  .toggle.on{background:var(--accent);}
-  .toggle .knob{
-    position:absolute; top:2px; inset-inline-start:2px; width:18px; height:18px; border-radius:50%; background:#fff;
-    transition:inset-inline-start .15s; box-shadow:0 1px 2px rgba(0,0,0,.2);
+
+  .svc-table input[type=text],
+  .svc-table input[type=number] {
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 14px;
+    color: var(--text);
+    width: 100%;
+    font-family: inherit;
   }
-  .toggle.on .knob{inset-inline-start:18px;}
-  .add-service-row{display:flex; gap:10px; padding:16px 18px; flex-wrap:wrap; align-items:flex-end;}
-  .section-title{font-size:15.5px; font-weight:700; margin:0 0 2px;}
-  .section-sub{font-size:13px; color:var(--text-soft); margin:0 0 14px;}
-  .settings-block{padding:20px; display:flex; flex-direction:column; gap:14px;}
-  .hours-row{display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid var(--border);}
-  .hours-row:last-child{border-bottom:none;}
-  .hours-row .day-name{width:76px; font-weight:600; font-size:14px; flex-shrink:0;}
-  .hours-row input[type=time]{
-    border:1px solid var(--border); border-radius:8px; padding:7px 9px; font-size:13.5px; background:var(--bg);
-    color:var(--text); font-family:inherit;
+
+  .svc-table input:hover,
+  .svc-table input:focus {
+    border-color: var(--border);
+    background: var(--bg);
   }
-  .hours-row .to{color:var(--text-soft); font-size:13px;}
-  .hours-row .closed-label{color:var(--text-soft); font-size:13px;}
+
+  .svc-table input[type=number] {
+    width: 70px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .toggle {
+    width: 38px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--border);
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    border: none;
+    padding: 0;
+  }
+
+  .toggle.on {
+    background: var(--accent);
+  }
+
+  .toggle .knob {
+    position: absolute;
+    top: 2px;
+    inset-inline-start: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    transition: inset-inline-start .15s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+  }
+
+  .toggle.on .knob {
+    inset-inline-start: 18px;
+  }
+
+  .add-service-row {
+    display: flex;
+    gap: 10px;
+    padding: 16px 18px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  /* .field's bottom margin would push the inputs 16px above the button baseline */
+  .add-service-row .field {
+    margin-bottom: 0;
+  }
+
+  .section-title {
+    font-size: 15.5px;
+    font-weight: 700;
+    margin: 0 0 2px;
+  }
+
+  .section-sub {
+    font-size: 13px;
+    color: var(--text-soft);
+    margin: 0 0 14px;
+  }
+
+  .settings-block {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .settings-block .section-sub {
+    margin-bottom: 0;
+  }
+
+  /* Two columns so no single card has to stretch across the whole screen. */
+  .settings-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  @media (max-width: 900px) {
+    .settings-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .stat {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 9px 12px;
+  }
+
+  .stat .v {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat .k {
+    font-size: 11.5px;
+    color: var(--text-soft);
+    font-weight: 600;
+    margin-top: 1px;
+  }
+
+  /* Week-at-a-glance: one bar per day, placed on a shared hours scale. */
+  .week-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .week-bar {
+    display: grid;
+    grid-template-columns: 50px minmax(0, 1fr) 36px;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+  }
+
+  .week-bar .wb-day {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .week-bar .track {
+    position: relative;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--bg);
+    box-shadow: inset 0 0 0 1px var(--border);
+  }
+
+  .week-bar .fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-radius: 5px;
+    background: linear-gradient(to left, var(--accent), var(--accent-dark));
+  }
+
+  .week-bar .wb-note {
+    font-size: 11px;
+    color: var(--text-soft);
+  }
+
+  .week-bar.off .wb-day {
+    color: var(--text-soft);
+  }
+
+  .scale-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: var(--text-soft);
+    font-variant-numeric: tabular-nums;
+    padding-inline-start: 60px;
+    padding-inline-end: 46px;
+  }
+
+  .hours-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hours-row:last-child {
+    border-bottom: none;
+  }
+
+  .hours-row .day-name {
+    width: 64px;
+    font-weight: 600;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .hours-row input[type=time] {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 9px;
+    font-size: 13.5px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+  }
+
+  .hours-row .to {
+    color: var(--text-soft);
+    font-size: 13px;
+  }
+
+  .hours-row .closed-label {
+    color: var(--text-soft);
+    font-size: 13px;
+  }
 
   /* ---------- Toast ---------- */
-  .toast{
-    position:fixed; bottom:calc(24px + env(safe-area-inset-bottom,0px)); right:28px; z-index:60;
-    background:var(--text); color:var(--bg); padding:13px 18px; border-radius:12px; font-size:13.5px;
-    box-shadow:var(--shadow); display:flex; align-items:center; gap:10px; max-width:320px;
+  .toast {
+    position: fixed;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    right: 28px;
+    z-index: 60;
+    background: var(--text);
+    color: var(--bg);
+    padding: 13px 18px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 320px;
   }
-  .toast.err{background:var(--danger);}
-  .toast.ok{background:var(--success);}
+
+  .toast.err {
+    background: var(--danger);
+  }
+
+  .toast.ok {
+    background: var(--success);
+  }
 
   /* ---------- Bottom tab bar (phone) ---------- */
-  .tabbar{display:none;}
-  .section-gap{height:14px;}
+  .tabbar {
+    display: none;
+  }
 
-  @media (max-width: 860px){
-    .sidebar{display:none;}
-    .shell{flex-direction:column;}
-    .content{padding:4px 16px 92px;}
-    .topbar{padding:18px 16px 10px;}
-    .form-row-2{grid-template-columns:1fr;}
-    .form-row-2--with-btn{grid-template-columns:1fr; align-items:stretch;}
-    .week-grid{grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px;}
-    .week-day{min-height:84px; padding:8px 4px;}
-    .week-day .wd-date{font-size:14px;}
-    .week-day .wd-count{font-size:10px; padding:2px 6px;}
-    .fab{left:16px; bottom:calc(76px + env(safe-area-inset-bottom,0px)); padding:14px 18px; font-size:14px;}
-    .tabbar{
-      display:flex; position:fixed; bottom:0; inset-inline:0; z-index:15; background:var(--surface);
-      border-top:1px solid var(--border); padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px));
-      justify-content:space-around;
+  .section-gap {
+    height: 14px;
+  }
+
+  @media (max-width: 860px) {
+    .sidebar {
+      display: none;
     }
-    .tabbar button{
-      background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px;
-      color:var(--text-soft); font-size:10.5px; font-weight:600; padding:4px 6px; flex:1;
+
+    .shell {
+      flex-direction: column;
     }
-    .tabbar button.active{color:var(--accent-dark);}
-    .tabbar .ic{display:inline-flex;}
-    .appt-row{flex-wrap:wrap;}
-    .appt-phone{order:3; width:100%; padding-inline-start:108px;}
-    .svc-table{display:block; overflow-x:auto;}
+
+    .content {
+      padding: 4px 16px 18px;
+    }
+
+    .content.has-fab {
+      padding-bottom: 82px;
+    }
+
+    .topbar {
+      padding: 18px 16px 10px;
+    }
+
+    .form-row-2 {
+      grid-template-columns: 1fr;
+    }
+
+    .form-row-2--with-btn {
+      grid-template-columns: 1fr;
+      align-items: stretch;
+    }
+
+    .month-grid,
+    .month-head {
+      gap: 4px;
+    }
+
+    .month-head span {
+      font-size: 10px;
+    }
+
+    .month-day {
+      padding: 5px 4px;
+      border-radius: 9px;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .month-day .md-date {
+      font-size: 13px;
+    }
+
+    .month-day .md-count {
+      font-size: 10px;
+      padding: 1px 6px;
+    }
+
+    .md-count-label {
+      display: none;
+    }
+
+    .fab {
+      left: 16px;
+      bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+      padding: 14px 18px;
+      font-size: 14px;
+    }
+
+    .tabbar {
+      display: flex;
+      position: relative;
+      flex-shrink: 0;
+      z-index: 15;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+      justify-content: space-around;
+    }
+
+    .tabbar button {
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-soft);
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 4px 6px;
+      flex: 1;
+    }
+
+    .tabbar button.active {
+      color: var(--accent-dark);
+    }
+
+    .tabbar .ic {
+      display: inline-flex;
+    }
+
+    .appt-row {
+      flex-wrap: wrap;
+    }
+
+    .appt-phone {
+      order: 3;
+      width: 100%;
+      padding-inline-start: 108px;
+    }
+
+    .svc-table {
+      display: block;
+      overflow-x: auto;
+    }
   }
 </style>
 
 <div id="app"></div>
 
 <script>
-const { createApp, h, ref, reactive, computed, onMounted, watch, nextTick } = Vue;
+  const { createApp, h, ref, reactive, computed, onMounted, watch, nextTick } = Vue;
 
-/* ---------------- icon set (inline, stroke-based -- no emoji) ---------------- */
-const ICON_PATHS = {
-  calendar: '<rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/>',
-  'calendar-week': '<rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="9" y1="9" x2="9" y2="21"/><line x1="15" y1="9" x2="15" y2="21"/><line x1="3" y1="15" x2="21" y2="15"/>',
-  sparkles: '<path d="M12 3l1.6 4.9 4.9 1.6-4.9 1.6L12 16l-1.6-4.9-4.9-1.6 4.9-1.6L12 3z"/><path d="M19 2.3l.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5 1.5-.5.5-1.5z"/>',
-  sliders: '<line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="2"/>',
-  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>',
-  check: '<polyline points="4 12 9 17 20 6"/>',
-  x: '<line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/>',
-  'log-out': '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
-  'chevron-left': '<polyline points="15 18 9 12 15 6"/>',
-  'chevron-right': '<polyline points="9 18 15 12 9 6"/>',
-  'alert-triangle': '<polygon points="12,3 22,20 2,20"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/>',
-  'empty-calendar': '<rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="7.5" y1="14" x2="7.51" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16.5" y1="14" x2="16.51" y2="14"/>',
-  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
-};
-const Icon = {
-  props: { name: String, size: { type:[Number,String], default:18 } },
-  render(){
-    return h('svg', {
-      width: this.size, height: this.size, viewBox: '0 0 24 24', fill: 'none',
-      stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap':'round', 'stroke-linejoin':'round',
-      'aria-hidden': 'true', innerHTML: ICON_PATHS[this.name] || '',
-    });
-  }
-};
-
-/* ---------------- Supabase config ----------------
-   Filled in once the real Supabase project exists; until then the page
-   renders fully but data calls will show a friendly connection error. */
-const SUPABASE_URL = "https://hmnufsmusrgadbetpsaq.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtbnVmc211c3JnYWRiZXRwc2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MDk5MTMsImV4cCI6MjEwNzI4NTkxM30.IdFekkvhxAwTR9KNmQSKi_x2xzIPSYbgrP_86HD8D5c";
-const supa = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-
-/* ---------------- date/time helpers ---------------- */
-const WEEKDAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-const MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
-
-function pad(n){ return String(n).padStart(2,'0'); }
-function toISODate(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-function parseISODate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
-function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
-function startOfWeek(d){ const r=new Date(d); r.setDate(r.getDate()-r.getDay()); return r; }
-function heDate(d){ return `יום ${WEEKDAYS[d.getDay()]}, ${d.getDate()} ב${MONTHS[d.getMonth()]}`; }
-function heDateShort(d){ return `${d.getDate()}/${d.getMonth()+1}`; }
-function timeToMin(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
-function minToTime(m){ m=((m%1440)+1440)%1440; return `${pad(Math.floor(m/60))}:${pad(m%60)}`; }
-function addMinToTime(t,mins){ return minToTime(timeToMin(t)+mins); }
-function fmtTime(t){ return t ? t.slice(0,5) : ''; }
-function todayISO(){ return toISODate(new Date()); }
-
-/* ---------------- shared store ---------------- */
-const store = reactive({
-  session: null,
-  services: [],
-  businessHours: [],
-  settings: null,
-  byDate: {},       // 'YYYY-MM-DD' -> appointments[]
-  loadingStatic: false,
-  bootError: '',
-});
-
-let toastTimer = null;
-const toast = reactive({ show:false, msg:'', type:'ok' });
-function showToast(msg, type='ok'){
-  toast.show = true; toast.msg = msg; toast.type = type;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>{ toast.show = false; }, 3200);
-}
-
-function friendlyError(err){
-  if (!supa) return 'החיבור ל-Supabase עדיין לא הוגדר באתר הזה.';
-  const msg = (err && (err.message || err.error_description)) || 'משהו השתבש, נסי שוב.';
-  if (/Invalid login credentials/i.test(msg)) return 'אימייל או סיסמה שגויים.';
-  if (/Failed to fetch/i.test(msg)) return 'בעיית חיבור לשרת. בדקי את החיבור לאינטרנט ונסי שוב.';
-  return msg;
-}
-
-async function loadStaticData(){
-  if (!supa) { store.bootError = 'החיבור ל-Supabase עדיין לא הוגדר.'; return; }
-  store.loadingStatic = true;
-  try{
-    const [svcRes, hoursRes, settingsRes] = await Promise.all([
-      supa.from('services').select('*').eq('active', true).order('sort_order'),
-      supa.from('business_hours').select('*').order('day_of_week'),
-      supa.from('business_settings').select('*').eq('id',1).single(),
-    ]);
-    if (svcRes.error) throw svcRes.error;
-    if (hoursRes.error) throw hoursRes.error;
-    if (settingsRes.error) throw settingsRes.error;
-    store.services = svcRes.data || [];
-    store.businessHours = hoursRes.data || [];
-    store.settings = settingsRes.data || null;
-  }catch(err){
-    store.bootError = friendlyError(err);
-  }finally{
-    store.loadingStatic = false;
-  }
-}
-
-async function loadAllServices(){ // includes inactive, for the services screen
-  if (!supa) return [];
-  const { data, error } = await supa.from('services').select('*').order('sort_order');
-  if (error) { showToast(friendlyError(error), 'err'); return []; }
-  return data || [];
-}
-
-async function ensureDateLoaded(dateStr, force){
-  if (!supa) return [];
-  if (!force && store.byDate[dateStr]) return store.byDate[dateStr];
-  const { data, error } = await supa
-    .from('appointments')
-    .select('*, services(name, duration_minutes)')
-    .eq('appointment_date', dateStr)
-    .neq('status','cancelled')
-    .order('start_time');
-  if (error){ showToast(friendlyError(error), 'err'); return []; }
-  store.byDate[dateStr] = data || [];
-  return store.byDate[dateStr];
-}
-
-function findConflict(dateStr, start, end, excludeId){
-  const list = store.byDate[dateStr] || [];
-  const s = timeToMin(start), e = timeToMin(end);
-  return list.find(a => a.id !== excludeId && a.status !== 'cancelled' &&
-    s < timeToMin(a.end_time) && e > timeToMin(a.start_time));
-}
-
-/* ---------------- Login ---------------- */
-const LoginView = {
-  setup(){
-    const email = ref('');
-    const password = ref('');
-    const error = ref('');
-    const loading = ref(false);
-    async function submit(){
-      if (!supa){ error.value = 'החיבור ל-Supabase עדיין לא הוגדר באתר הזה.'; return; }
-      error.value = ''; loading.value = true;
-      try{
-        const { data, error: err } = await supa.auth.signInWithPassword({ email: email.value, password: password.value });
-        if (err) throw err;
-        store.session = data.session;
-      }catch(err){
-        error.value = friendlyError(err);
-      }finally{
-        loading.value = false;
-      }
+  /* ---------------- icon set (inline, stroke-based -- no emoji) ---------------- */
+  const ICON_PATHS = {
+    calendar: '<rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/>',
+    'calendar-week': '<rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="9" y1="9" x2="9" y2="21"/><line x1="15" y1="9" x2="15" y2="21"/><line x1="3" y1="15" x2="21" y2="15"/>',
+    sparkles: '<path d="M12 3l1.6 4.9 4.9 1.6-4.9 1.6L12 16l-1.6-4.9-4.9-1.6 4.9-1.6L12 3z"/><path d="M19 2.3l.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5 1.5-.5.5-1.5z"/>',
+    sliders: '<line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="2"/>',
+    edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>',
+    check: '<polyline points="4 12 9 17 20 6"/>',
+    x: '<line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/>',
+    'log-out': '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+    'chevron-left': '<polyline points="15 18 9 12 15 6"/>',
+    'chevron-right': '<polyline points="9 18 15 12 9 6"/>',
+    'alert-triangle': '<polygon points="12,3 22,20 2,20"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/>',
+    'empty-calendar': '<rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="7.5" y1="14" x2="7.51" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16.5" y1="14" x2="16.51" y2="14"/>',
+    plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  };
+  const Icon = {
+    props: { name: String, size: { type: [Number, String], default: 18 } },
+    render() {
+      return h('svg', {
+        width: this.size, height: this.size, viewBox: '0 0 24 24', fill: 'none',
+        stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+        'aria-hidden': 'true', innerHTML: ICON_PATHS[this.name] || '',
+      });
     }
-    return { email, password, error, loading, submit };
-  },
-  template: `
+  };
+
+  /* ---------------- Supabase config ----------------
+     Filled in once the real Supabase project exists; until then the page
+     renders fully but data calls will show a friendly connection error. */
+  const SUPABASE_URL = "https://hmnufsmusrgadbetpsaq.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtbnVmc211c3JnYWRiZXRwc2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MDk5MTMsImV4cCI6MjEwNzI4NTkxM30.IdFekkvhxAwTR9KNmQSKi_x2xzIPSYbgrP_86HD8D5c";
+  const supa = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+  /* ---------------- date/time helpers ---------------- */
+  const WEEKDAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+  const WEEKDAYS_SHORT = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+  const MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function toISODate(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+  function parseISODate(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+  function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+  function startOfWeek(d) { const r = new Date(d); r.setDate(r.getDate() - r.getDay()); return r; }
+  function heDate(d) { return `יום ${WEEKDAYS[d.getDay()]}, ${d.getDate()} ב${MONTHS[d.getMonth()]}`; }
+  function heDateShort(d) { return `${d.getDate()}/${d.getMonth() + 1}`; }
+  function timeToMin(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+  function minToTime(m) { m = ((m % 1440) + 1440) % 1440; return `${pad(Math.floor(m / 60))}:${pad(m % 60)}`; }
+  function addMinToTime(t, mins) { return minToTime(timeToMin(t) + mins); }
+  function fmtTime(t) { return t ? t.slice(0, 5) : ''; }
+  function todayISO() { return toISODate(new Date()); }
+
+  /* ---------------- shared store ---------------- */
+  const store = reactive({
+    session: null,
+    services: [],
+    businessHours: [],
+    settings: null,
+    byDate: {},       // 'YYYY-MM-DD' -> appointments[]
+    loadingStatic: false,
+    bootError: '',
+  });
+
+  let toastTimer = null;
+  const toast = reactive({ show: false, msg: '', type: 'ok' });
+  function showToast(msg, type = 'ok') {
+    toast.show = true; toast.msg = msg; toast.type = type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toast.show = false; }, 3200);
+  }
+
+  function friendlyError(err) {
+    if (!supa) return 'החיבור ל-Supabase עדיין לא הוגדר באתר הזה.';
+    const msg = (err && (err.message || err.error_description)) || 'משהו השתבש, נסי שוב.';
+    if (/Invalid login credentials/i.test(msg)) return 'אימייל או סיסמה שגויים.';
+    if (/Failed to fetch/i.test(msg)) return 'בעיית חיבור לשרת. בדקי את החיבור לאינטרנט ונסי שוב.';
+    return msg;
+  }
+
+  async function loadStaticData() {
+    if (!supa) { store.bootError = 'החיבור ל-Supabase עדיין לא הוגדר.'; return; }
+    store.loadingStatic = true;
+    try {
+      const [svcRes, hoursRes, settingsRes] = await Promise.all([
+        supa.from('services').select('*').eq('active', true).order('sort_order'),
+        supa.from('business_hours').select('*').order('day_of_week'),
+        supa.from('business_settings').select('*').eq('id', 1).single(),
+      ]);
+      if (svcRes.error) throw svcRes.error;
+      if (hoursRes.error) throw hoursRes.error;
+      if (settingsRes.error) throw settingsRes.error;
+      store.services = svcRes.data || [];
+      store.businessHours = hoursRes.data || [];
+      store.settings = settingsRes.data || null;
+    } catch (err) {
+      store.bootError = friendlyError(err);
+    } finally {
+      store.loadingStatic = false;
+    }
+  }
+
+  async function loadAllServices() { // includes inactive, for the services screen
+    if (!supa) return [];
+    const { data, error } = await supa.from('services').select('*').order('sort_order');
+    if (error) { showToast(friendlyError(error), 'err'); return []; }
+    return data || [];
+  }
+
+  async function ensureDateLoaded(dateStr, force) {
+    if (!supa) return [];
+    if (!force && store.byDate[dateStr]) return store.byDate[dateStr];
+    const { data, error } = await supa
+      .from('appointments')
+      .select('*, services(name, duration_minutes)')
+      .eq('appointment_date', dateStr)
+      .neq('status', 'cancelled')
+      .order('start_time');
+    if (error) { showToast(friendlyError(error), 'err'); return []; }
+    store.byDate[dateStr] = data || [];
+    return store.byDate[dateStr];
+  }
+
+  // one query for a whole span of days (the month grid), cached per day like
+  // ensureDateLoaded so the day view reuses whatever the calendar already has
+  async function ensureRangeLoaded(fromStr, toStr, force) {
+    if (!supa) return;
+    const days = [];
+    for (let d = parseISODate(fromStr); toISODate(d) <= toStr; d = addDays(d, 1)) days.push(toISODate(d));
+    if (!force && days.every(d => store.byDate[d])) return;
+    const { data, error } = await supa
+      .from('appointments')
+      .select('*, services(name, duration_minutes)')
+      .gte('appointment_date', fromStr)
+      .lte('appointment_date', toStr)
+      .neq('status', 'cancelled')
+      .order('start_time');
+    if (error) { showToast(friendlyError(error), 'err'); return; }
+    const grouped = {};
+    for (const day of days) grouped[day] = [];
+    for (const a of data || []) if (grouped[a.appointment_date]) grouped[a.appointment_date].push(a);
+    for (const day of days) store.byDate[day] = grouped[day];
+  }
+
+  function findConflict(dateStr, start, end, excludeId) {
+    const list = store.byDate[dateStr] || [];
+    const s = timeToMin(start), e = timeToMin(end);
+    return list.find(a => a.id !== excludeId && a.status !== 'cancelled' &&
+      s < timeToMin(a.end_time) && e > timeToMin(a.start_time));
+  }
+
+  /* ---------------- Login ---------------- */
+  const LoginView = {
+    setup() {
+      const email = ref('');
+      const password = ref('');
+      const error = ref('');
+      const loading = ref(false);
+      async function submit() {
+        if (!supa) { error.value = 'החיבור ל-Supabase עדיין לא הוגדר באתר הזה.'; return; }
+        error.value = ''; loading.value = true;
+        try {
+          const { data, error: err } = await supa.auth.signInWithPassword({ email: email.value, password: password.value });
+          if (err) throw err;
+          store.session = data.session;
+        } catch (err) {
+          error.value = friendlyError(err);
+        } finally {
+          loading.value = false;
+        }
+      }
+      return { email, password, error, loading, submit };
+    },
+    template: `
   <div class="login-screen">
     <div class="login-card">
       <div class="login-brand">
@@ -490,22 +1421,22 @@ const LoginView = {
           <label for="login-password">סיסמה</label>
           <input id="login-password" type="password" v-model="password" required autocomplete="current-password" dir="ltr" style="text-align:left">
         </div>
-        <button class="btn btn-primary" type="submit" :disabled="loading">{{ loading ? 'מתחברת…' : 'התחברות' }}</button>
+        <button class="btn btn-primary btn-block" type="submit" :disabled="loading">{{ loading ? 'מתחברת…' : 'התחברות' }}</button>
       </form>
       <p class="login-hint">המערכת מיועדת לשימוש הקוסמטיקאית בלבד.<br>לקוחות קובעות תור בטלפון.</p>
     </div>
   </div>`
-};
+  };
 
-/* ---------------- Appointment row ---------------- */
-const AppointmentRow = {
-  props: ['appt'],
-  emits: ['edit','done','cancel'],
-  setup(props, { emit }){
-    const svcName = computed(()=> props.appt.services ? props.appt.services.name : 'טיפול');
-    return { svcName, fmtTime };
-  },
-  template: `
+  /* ---------------- Appointment row ---------------- */
+  const AppointmentRow = {
+    props: ['appt'],
+    emits: ['edit', 'done', 'cancel'],
+    setup(props, { emit }) {
+      const svcName = computed(() => props.appt.services ? props.appt.services.name : 'טיפול');
+      return { svcName, fmtTime };
+    },
+    template: `
   <div class="appt-row">
     <div class="appt-time">{{ fmtTime(appt.start_time) }}–{{ fmtTime(appt.end_time) }}
       <span class="dur" v-if="appt.services">{{ appt.services.duration_minutes }} דק׳</span>
@@ -525,34 +1456,34 @@ const AppointmentRow = {
       <button class="icon-btn" title="ביטול תור" @click="$emit('cancel', appt)"><icon name="x" size="15"/></button>
     </div>
   </div>`
-};
+  };
 
-/* ---------------- Day list (used by Today view) ---------------- */
-const DayAppointments = {
-  components: { AppointmentRow },
-  props: ['dateStr'],
-  emits: ['edit'],
-  setup(props, { emit }){
-    const list = computed(()=> store.byDate[props.dateStr] || []);
-    const loading = ref(false);
-    async function load(){ loading.value = true; await ensureDateLoaded(props.dateStr); loading.value = false; }
-    watch(()=>props.dateStr, load, { immediate:true });
+  /* ---------------- Day list (used by Today view) ---------------- */
+  const DayAppointments = {
+    components: { AppointmentRow },
+    props: ['dateStr'],
+    emits: ['edit'],
+    setup(props, { emit }) {
+      const list = computed(() => store.byDate[props.dateStr] || []);
+      const loading = ref(false);
+      async function load() { loading.value = true; await ensureDateLoaded(props.dateStr); loading.value = false; }
+      watch(() => props.dateStr, load, { immediate: true });
 
-    async function markDone(appt){
-      const { error } = await supa.from('appointments').update({ status:'done' }).eq('id', appt.id);
-      if (error){ showToast(friendlyError(error),'err'); return; }
-      await ensureDateLoaded(props.dateStr, true);
-      showToast('התור סומן כהושלם');
-    }
-    async function cancelAppt(appt){
-      const { error } = await supa.from('appointments').update({ status:'cancelled' }).eq('id', appt.id);
-      if (error){ showToast(friendlyError(error),'err'); return; }
-      await ensureDateLoaded(props.dateStr, true);
-      showToast('התור בוטל');
-    }
-    return { list, loading, markDone, cancelAppt };
-  },
-  template: `
+      async function markDone(appt) {
+        const { error } = await supa.from('appointments').update({ status: 'done' }).eq('id', appt.id);
+        if (error) { showToast(friendlyError(error), 'err'); return; }
+        await ensureDateLoaded(props.dateStr, true);
+        showToast('התור סומן כהושלם');
+      }
+      async function cancelAppt(appt) {
+        const { error } = await supa.from('appointments').update({ status: 'cancelled' }).eq('id', appt.id);
+        if (error) { showToast(friendlyError(error), 'err'); return; }
+        await ensureDateLoaded(props.dateStr, true);
+        showToast('התור בוטל');
+      }
+      return { list, loading, markDone, cancelAppt };
+    },
+    template: `
   <div class="card">
     <div class="appt-list" v-if="list.length">
       <appointment-row v-for="a in list" :key="a.id" :appt="a"
@@ -565,166 +1496,193 @@ const DayAppointments = {
     </div>
     <div class="empty-state" v-else><span>טוענת…</span></div>
   </div>`
-};
+  };
 
-/* ---------------- Today view ---------------- */
-const TodayView = {
-  components: { DayAppointments },
-  props: ['selected'],
-  emits: ['new-appt','edit-appt','update:selected'],
-  setup(props, { emit }){
-    const dateStr = computed(()=> toISODate(props.selected));
-    const label = computed(()=> heDate(props.selected));
-    const isToday = computed(()=> dateStr.value === todayISO());
-    function shift(n){ emit('update:selected', addDays(props.selected, n)); }
-    function goToday(){ emit('update:selected', new Date()); }
-    return { dateStr, label, isToday, shift, goToday };
-  },
-  template: `
+  /* ---------------- Today view ---------------- */
+  const TodayView = {
+    components: { DayAppointments },
+    props: ['selected'],
+    emits: ['new-appt', 'edit-appt', 'update:selected'],
+    setup(props, { emit }) {
+      const dateStr = computed(() => toISODate(props.selected));
+      const label = computed(() => heDate(props.selected));
+      const isToday = computed(() => dateStr.value === todayISO());
+      function shift(n) { emit('update:selected', addDays(props.selected, n)); }
+      function goToday() { emit('update:selected', new Date()); }
+      return { dateStr, label, isToday, shift, goToday };
+    },
+    template: `
   <div>
-    <div class="week-nav">
-      <button class="icon-btn" title="יום קודם" @click="shift(-1)"><icon name="chevron-left" size="16"/></button>
-      <button class="icon-btn" title="יום הבא" @click="shift(1)"><icon name="chevron-right" size="16"/></button>
+    <div class="view-nav">
+      <button class="icon-btn" title="יום קודם" @click="shift(-1)"><icon name="chevron-right" size="16"/></button>
+      <button class="icon-btn" title="יום הבא" @click="shift(1)"><icon name="chevron-left" size="16"/></button>
       <button class="btn btn-ghost" style="padding:7px 14px;font-size:13px" v-if="!isToday" @click="goToday">היום</button>
       <strong style="margin-inline-start:4px">{{ label }}</strong>
     </div>
     <day-appointments :date-str="dateStr" @edit="$emit('edit-appt',$event)" />
   </div>`
-};
+  };
 
-/* ---------------- Week view ---------------- */
-const WeekView = {
-  emits: ['open-day'],
-  setup(props, { emit }){
-    const anchor = ref(startOfWeek(new Date()));
-    const days = computed(()=> Array.from({length:7}, (_,i)=> addDays(anchor.value, i)));
-    const todayStr = todayISO();
-    watch(days, (ds)=>{ ds.forEach(d=> ensureDateLoaded(toISODate(d))); }, { immediate:true });
-    function shiftWeek(n){ anchor.value = addDays(anchor.value, n*7); }
-    function hoursFor(d){ return store.businessHours.find(h=>h.day_of_week===d.getDay()); }
-    function countFor(d){ const list = store.byDate[toISODate(d)]; return list ? list.length : null; }
-    return { days, todayStr, shiftWeek, hoursFor, countFor, heDateShort, toISODate, WEEKDAYS };
-  },
-  template: `
-  <div>
-    <div class="week-nav">
-      <button class="icon-btn" title="שבוע קודם" @click="shiftWeek(-1)"><icon name="chevron-left" size="16"/></button>
-      <button class="icon-btn" title="שבוע הבא" @click="shiftWeek(1)"><icon name="chevron-right" size="16"/></button>
-      <strong style="margin-inline-start:4px">{{ heDateShort(days[0]) }} – {{ heDateShort(days[6]) }}</strong>
+  /* ---------------- Month view ---------------- */
+  const MonthView = {
+    props: ['selected'],
+    emits: ['open-day', 'update:selected'],
+    setup(props, { emit }) {
+      const anchor = ref(new Date(props.selected.getFullYear(), props.selected.getMonth(), 1));
+      // always six rows from the Sunday before the 1st, so the grid never changes height
+      const gridDays = computed(() => {
+        const first = startOfWeek(anchor.value);
+        return Array.from({ length: 42 }, (_, i) => addDays(first, i));
+      });
+      const monthLabel = computed(() => `${MONTHS[anchor.value.getMonth()]} ${anchor.value.getFullYear()}`);
+      const todayStr = todayISO();
+      const selStr = computed(() => toISODate(props.selected));
+
+      watch(gridDays, (ds) => ensureRangeLoaded(toISODate(ds[0]), toISODate(ds[41])), { immediate: true });
+      // follow the selected day into its own month (e.g. after picking a trailing day)
+      watch(() => props.selected, (d) => {
+        if (d.getFullYear() !== anchor.value.getFullYear() || d.getMonth() !== anchor.value.getMonth()) {
+          anchor.value = new Date(d.getFullYear(), d.getMonth(), 1);
+        }
+      });
+
+      const isThisMonth = computed(() => {
+        const t = new Date();
+        return anchor.value.getFullYear() === t.getFullYear() && anchor.value.getMonth() === t.getMonth();
+      });
+      function shiftMonth(n) { anchor.value = new Date(anchor.value.getFullYear(), anchor.value.getMonth() + n, 1); }
+      function goToday() { emit('update:selected', new Date()); }
+      function hoursFor(d) { return store.businessHours.find(h => h.day_of_week === d.getDay()); }
+      function isClosed(d) { const h = hoursFor(d); return !!h && !h.is_open; }
+      function countFor(d) { const list = store.byDate[toISODate(d)]; return list ? list.length : 0; }
+      function inMonth(d) { return d.getMonth() === anchor.value.getMonth(); }
+
+      return {
+        gridDays, monthLabel, todayStr, selStr, isThisMonth, shiftMonth, goToday,
+        isClosed, countFor, inMonth, toISODate, heDate, WEEKDAYS_SHORT,
+      };
+    },
+    template: `
+  <div class="month-view">
+    <div class="view-nav">
+      <button class="icon-btn" title="חודש קודם" @click="shiftMonth(-1)"><icon name="chevron-right" size="16"/></button>
+      <button class="icon-btn" title="חודש הבא" @click="shiftMonth(1)"><icon name="chevron-left" size="16"/></button>
+      <button class="btn btn-ghost" style="padding:7px 14px;font-size:13px" v-if="!isThisMonth" @click="goToday">החודש</button>
+      <strong style="margin-inline-start:4px">{{ monthLabel }}</strong>
     </div>
-    <div class="week-grid">
-      <div class="week-day" v-for="d in days" :key="toISODate(d)"
-        :class="{ today: toISODate(d)===todayStr, closed: hoursFor(d) && !hoursFor(d).is_open }"
-        @click="$emit('open-day', d)">
-        <div class="wd-name">{{ WEEKDAYS[d.getDay()] }}</div>
-        <div class="wd-date">{{ d.getDate() }}</div>
-        <div class="wd-count" v-if="countFor(d)!==null">{{ countFor(d) }} תורים</div>
-      </div>
+    <div class="month-head"><span v-for="(n, i) in WEEKDAYS_SHORT" :key="i">{{ n }}</span></div>
+    <div class="month-grid">
+      <button class="month-day" v-for="d in gridDays" :key="toISODate(d)"
+        :class="{ other: !inMonth(d), today: toISODate(d)===todayStr, sel: toISODate(d)===selStr, closed: isClosed(d) }"
+        :title="heDate(d)" @click="$emit('update:selected', d)" @dblclick="$emit('open-day', d)">
+        <span class="md-date">{{ d.getDate() }}</span>
+        <span class="md-count" v-if="countFor(d)">{{ countFor(d) }}<span class="md-count-label"> תורים</span></span>
+      </button>
     </div>
   </div>`
-};
+  };
 
-/* ---------------- New / Edit appointment modal ---------------- */
-const AppointmentModal = {
-  props: ['editing'],
-  emits: ['close','saved'],
-  setup(props, { emit }){
-    const isEdit = computed(()=> !!props.editing);
-    const form = reactive({
-      service_id: props.editing ? props.editing.service_id : (store.services[0]?.id || ''),
-      date: props.editing ? props.editing.appointment_date : todayISO(),
-      start_time: props.editing ? fmtTime(props.editing.start_time) : '',
-      client_name: props.editing ? props.editing.client_name : '',
-      client_phone: props.editing ? props.editing.client_phone : '',
-      notes: props.editing ? (props.editing.notes || '') : '',
-    });
-    const saving = ref(false);
-    const loadingSlots = ref(false);
-    const service = computed(()=> store.services.find(s=>s.id===form.service_id));
-    const endTime = computed(()=> service.value && form.start_time ? addMinToTime(form.start_time, service.value.duration_minutes) : '');
-    const dayHours = computed(()=> store.businessHours.find(h=> h.day_of_week === parseISODate(form.date).getDay()));
+  /* ---------------- New / Edit appointment modal ---------------- */
+  const AppointmentModal = {
+    props: ['editing', 'presetDate'],
+    emits: ['close', 'saved'],
+    setup(props, { emit }) {
+      const isEdit = computed(() => !!props.editing);
+      const form = reactive({
+        service_id: props.editing ? props.editing.service_id : (store.services[0]?.id || ''),
+        date: props.editing ? props.editing.appointment_date : (props.presetDate || todayISO()),
+        start_time: props.editing ? fmtTime(props.editing.start_time) : '',
+        client_name: props.editing ? props.editing.client_name : '',
+        client_phone: props.editing ? props.editing.client_phone : '',
+        notes: props.editing ? (props.editing.notes || '') : '',
+      });
+      const saving = ref(false);
+      const loadingSlots = ref(false);
+      const service = computed(() => store.services.find(s => s.id === form.service_id));
+      const endTime = computed(() => service.value && form.start_time ? addMinToTime(form.start_time, service.value.duration_minutes) : '');
+      const dayHours = computed(() => store.businessHours.find(h => h.day_of_week === parseISODate(form.date).getDay()));
 
-    // appointments on the chosen date that count as "taken" -- excludes the appointment
-    // being edited, so its own current slot stays selectable.
-    const busyList = computed(()=> (store.byDate[form.date] || [])
-      .filter(a => a.status !== 'cancelled' && (!props.editing || a.id !== props.editing.id)));
+      // appointments on the chosen date that count as "taken" -- excludes the appointment
+      // being edited, so its own current slot stays selectable.
+      const busyList = computed(() => (store.byDate[form.date] || [])
+        .filter(a => a.status !== 'cancelled' && (!props.editing || a.id !== props.editing.id)));
 
-    // every start time, in 5-minute steps, where the selected service fits inside business
-    // hours without overlapping an existing appointment -- the only times shown to pick from.
-    const availableSlots = computed(()=>{
-      const dur = service.value?.duration_minutes;
-      const hours = dayHours.value;
-      if (!dur || !hours || !hours.is_open) return [];
-      const openMin = timeToMin(hours.open_time), closeMin = timeToMin(hours.close_time);
-      const busy = busyList.value;
-      const slots = [];
-      for (let t = openMin; t + dur <= closeMin; t += 5){
-        const end = t + dur;
-        if (!busy.some(a => t < timeToMin(a.end_time) && end > timeToMin(a.start_time))) slots.push(minToTime(t));
-      }
-      return slots;
-    });
-
-    // default pick: 5 minutes after the last appointment of the day ends, snapped to the
-    // nearest free slot at or after that -- otherwise the day's first free slot.
-    const suggestedStart = computed(()=>{
-      const slots = availableSlots.value;
-      if (!slots.length) return '';
-      const hours = dayHours.value;
-      const busy = busyList.value;
-      let candidate = timeToMin(hours.open_time);
-      if (busy.length) candidate = Math.max(candidate, Math.max(...busy.map(a => timeToMin(a.end_time))) + 5);
-      return slots.find(s => timeToMin(s) >= candidate) || slots[0];
-    });
-
-    async function refreshAvailability(){
-      loadingSlots.value = true;
-      await ensureDateLoaded(form.date, true);
-      loadingSlots.value = false;
-      if (!availableSlots.value.includes(form.start_time)) form.start_time = suggestedStart.value;
-    }
-    watch(()=>[form.date, form.service_id], refreshAvailability, { immediate:true });
-
-    async function save(){
-      if (!form.service_id || !form.start_time || !form.client_name.trim() || !form.client_phone.trim()) {
-        showToast('נא לבחור שעה פנויה ולמלא שם וטלפון', 'err'); return;
-      }
-      // last-moment safety net in case another booking landed while this modal was open
-      await ensureDateLoaded(form.date, true);
-      const conflict = findConflict(form.date, form.start_time, endTime.value, props.editing ? props.editing.id : null);
-      if (conflict){ showToast('השעה הזו נתפסה הרגע על ידי תור אחר, בחרי שעה אחרת', 'err'); await refreshAvailability(); return; }
-      saving.value = true;
-      const payload = {
-        service_id: form.service_id,
-        appointment_date: form.date,
-        start_time: form.start_time,
-        end_time: endTime.value,
-        client_name: form.client_name.trim(),
-        client_phone: form.client_phone.trim(),
-        notes: form.notes.trim() || null,
-      };
-      try{
-        let error;
-        if (isEdit.value){
-          ({ error } = await supa.from('appointments').update(payload).eq('id', props.editing.id));
-        } else {
-          ({ error } = await supa.from('appointments').insert(payload));
+      // every start time, in 5-minute steps, where the selected service fits inside business
+      // hours without overlapping an existing appointment -- the only times shown to pick from.
+      const availableSlots = computed(() => {
+        const dur = service.value?.duration_minutes;
+        const hours = dayHours.value;
+        if (!dur || !hours || !hours.is_open) return [];
+        const openMin = timeToMin(hours.open_time), closeMin = timeToMin(hours.close_time);
+        const busy = busyList.value;
+        const slots = [];
+        for (let t = openMin; t + dur <= closeMin; t += 5) {
+          const end = t + dur;
+          if (!busy.some(a => t < timeToMin(a.end_time) && end > timeToMin(a.start_time))) slots.push(minToTime(t));
         }
-        if (error) throw error;
-        await ensureDateLoaded(form.date, true);
-        if (isEdit.value && props.editing.appointment_date !== form.date) await ensureDateLoaded(props.editing.appointment_date, true);
-        showToast(isEdit.value ? 'התור עודכן' : 'התור נקבע בהצלחה');
-        emit('saved');
-      }catch(err){
-        showToast(friendlyError(err), 'err');
-      }finally{
-        saving.value = false;
-      }
-    }
+        return slots;
+      });
 
-    return { form, isEdit, service, endTime, availableSlots, loadingSlots, saving, save, store };
-  },
-  template: `
+      // default pick: 5 minutes after the last appointment of the day ends, snapped to the
+      // nearest free slot at or after that -- otherwise the day's first free slot.
+      const suggestedStart = computed(() => {
+        const slots = availableSlots.value;
+        if (!slots.length) return '';
+        const hours = dayHours.value;
+        const busy = busyList.value;
+        let candidate = timeToMin(hours.open_time);
+        if (busy.length) candidate = Math.max(candidate, Math.max(...busy.map(a => timeToMin(a.end_time))) + 5);
+        return slots.find(s => timeToMin(s) >= candidate) || slots[0];
+      });
+
+      async function refreshAvailability() {
+        loadingSlots.value = true;
+        await ensureDateLoaded(form.date, true);
+        loadingSlots.value = false;
+        if (!availableSlots.value.includes(form.start_time)) form.start_time = suggestedStart.value;
+      }
+      watch(() => [form.date, form.service_id], refreshAvailability, { immediate: true });
+
+      async function save() {
+        if (!form.service_id || !form.start_time || !form.client_name.trim() || !form.client_phone.trim()) {
+          showToast('נא לבחור שעה פנויה ולמלא שם וטלפון', 'err'); return;
+        }
+        // last-moment safety net in case another booking landed while this modal was open
+        await ensureDateLoaded(form.date, true);
+        const conflict = findConflict(form.date, form.start_time, endTime.value, props.editing ? props.editing.id : null);
+        if (conflict) { showToast('השעה הזו נתפסה הרגע על ידי תור אחר, בחרי שעה אחרת', 'err'); await refreshAvailability(); return; }
+        saving.value = true;
+        const payload = {
+          service_id: form.service_id,
+          appointment_date: form.date,
+          start_time: form.start_time,
+          end_time: endTime.value,
+          client_name: form.client_name.trim(),
+          client_phone: form.client_phone.trim(),
+          notes: form.notes.trim() || null,
+        };
+        try {
+          let error;
+          if (isEdit.value) {
+            ({ error } = await supa.from('appointments').update(payload).eq('id', props.editing.id));
+          } else {
+            ({ error } = await supa.from('appointments').insert(payload));
+          }
+          if (error) throw error;
+          await ensureDateLoaded(form.date, true);
+          if (isEdit.value && props.editing.appointment_date !== form.date) await ensureDateLoaded(props.editing.appointment_date, true);
+          showToast(isEdit.value ? 'התור עודכן' : 'התור נקבע בהצלחה');
+          emit('saved');
+        } catch (err) {
+          showToast(friendlyError(err), 'err');
+        } finally {
+          saving.value = false;
+        }
+      }
+
+      return { form, isEdit, service, endTime, availableSlots, loadingSlots, saving, save, store };
+    },
+    template: `
   <div class="overlay" @click.self="$emit('close')">
     <div class="modal">
       <div class="modal-head">
@@ -777,43 +1735,43 @@ const AppointmentModal = {
       </div>
     </div>
   </div>`
-};
+  };
 
-/* ---------------- Services view ---------------- */
-const ServicesView = {
-  setup(){
-    const list = ref([]);
-    const newSvc = reactive({ name:'', duration_minutes:30, price:'' });
-    const adding = ref(false);
+  /* ---------------- Services view ---------------- */
+  const ServicesView = {
+    setup() {
+      const list = ref([]);
+      const newSvc = reactive({ name: '', duration_minutes: 30, price: '' });
+      const adding = ref(false);
 
-    async function load(){ list.value = await loadAllServices(); }
-    onMounted(load);
+      async function load() { list.value = await loadAllServices(); }
+      onMounted(load);
 
-    async function saveField(svc, field, value){
-      const { error } = await supa.from('services').update({ [field]: value }).eq('id', svc.id);
-      if (error){ showToast(friendlyError(error),'err'); return; }
-      store.services = (await supa.from('services').select('*').eq('active', true).order('sort_order')).data || [];
-    }
-    async function toggleActive(svc){
-      svc.active = !svc.active;
-      await saveField(svc, 'active', svc.active);
-    }
-    async function addService(){
-      if (!newSvc.name.trim() || !newSvc.duration_minutes) { showToast('נא למלא שם ומשך זמן','err'); return; }
-      adding.value = true;
-      const { error } = await supa.from('services').insert({
-        name: newSvc.name.trim(), duration_minutes: Number(newSvc.duration_minutes),
-        price: newSvc.price ? Number(newSvc.price) : null, active:true, sort_order: list.value.length + 1,
-      });
-      adding.value = false;
-      if (error){ showToast(friendlyError(error),'err'); return; }
-      newSvc.name=''; newSvc.duration_minutes=30; newSvc.price='';
-      await load();
-      showToast('הטיפול נוסף');
-    }
-    return { list, newSvc, adding, saveField, toggleActive, addService };
-  },
-  template: `
+      async function saveField(svc, field, value) {
+        const { error } = await supa.from('services').update({ [field]: value }).eq('id', svc.id);
+        if (error) { showToast(friendlyError(error), 'err'); return; }
+        store.services = (await supa.from('services').select('*').eq('active', true).order('sort_order')).data || [];
+      }
+      async function toggleActive(svc) {
+        svc.active = !svc.active;
+        await saveField(svc, 'active', svc.active);
+      }
+      async function addService() {
+        if (!newSvc.name.trim() || !newSvc.duration_minutes) { showToast('נא למלא שם ומשך זמן', 'err'); return; }
+        adding.value = true;
+        const { error } = await supa.from('services').insert({
+          name: newSvc.name.trim(), duration_minutes: Number(newSvc.duration_minutes),
+          price: newSvc.price ? Number(newSvc.price) : null, active: true, sort_order: list.value.length + 1,
+        });
+        adding.value = false;
+        if (error) { showToast(friendlyError(error), 'err'); return; }
+        newSvc.name = ''; newSvc.duration_minutes = 30; newSvc.price = '';
+        await load();
+        showToast('הטיפול נוסף');
+      }
+      return { list, newSvc, adding, saveField, toggleActive, addService };
+    },
+    template: `
   <div class="card">
     <div style="padding:18px 18px 4px">
       <p class="section-title">קטלוג הטיפולים</p>
@@ -836,82 +1794,122 @@ const ServicesView = {
       <div class="field" style="flex:2;min-width:140px"><label>טיפול חדש</label><input type="text" v-model="newSvc.name"></div>
       <div class="field" style="width:100px"><label>דקות</label><input type="number" min="5" step="5" v-model="newSvc.duration_minutes"></div>
       <div class="field" style="width:100px"><label>מחיר ₪</label><input type="number" min="0" v-model="newSvc.price"></div>
-      <button class="btn btn-primary" style="height:42px" :disabled="adding" @click="addService">+ הוספה</button>
+      <button class="btn btn-primary" style="height:44px;padding-block:0" :disabled="adding" @click="addService">+ הוספה</button>
     </div>
   </div>`
-};
+  };
 
-/* ---------------- Settings view ---------------- */
-const SettingsView = {
-  setup(){
-    const name = ref(store.settings?.business_name || '');
-    const email = ref(store.settings?.owner_email || '');
-    const savingInfo = ref(false);
-    const hours = reactive(store.businessHours.map(h=>({...h})));
-    const savingHours = ref(false);
-    const sendingReport = ref(false);
+  /* ---------------- Settings view ---------------- */
+  const SettingsView = {
+    setup() {
+      const name = ref(store.settings?.business_name || '');
+      const email = ref(store.settings?.owner_email || '');
+      const savingInfo = ref(false);
+      const hours = reactive(store.businessHours.map(h => ({ ...h })));
+      const savingHours = ref(false);
+      const sendingReport = ref(false);
 
-    async function sendReportNow(){
-      sendingReport.value = true;
-      try{
-        const { data, error } = await supa.functions.invoke('daily-schedule-email', { method:'POST' });
-        if (error) throw error;
-        if (data && data.ok === false) throw new Error(data.error || 'שליחת הדוח נכשלה');
-        showToast(`הדוח של היום נשלח בהצלחה (${data?.count ?? 0} תורים)`);
-      }catch(err){
-        showToast(friendlyError(err), 'err');
-      }finally{
-        sendingReport.value = false;
+      /* --- week at a glance: derived live from the hours being edited --- */
+      function span(h) {
+        if (!h.is_open || !h.open_time || !h.close_time) return 0;
+        return Math.max(0, timeToMin(h.close_time) - timeToMin(h.open_time));
       }
-    }
+      const openDays = computed(() => hours.filter(h => span(h) > 0));
+      const weeklyMinutes = computed(() => openDays.value.reduce((t, h) => t + span(h), 0));
+      const weeklyHoursLabel = computed(() => {
+        const m = weeklyMinutes.value;
+        return m % 60 ? `${Math.floor(m / 60)}:${pad(m % 60)}` : String(Math.floor(m / 60));
+      });
+      const scale = computed(() => {
+        if (!openDays.value.length) return { from: 480, to: 1200 };
+        const from = Math.floor(Math.min(...openDays.value.map(h => timeToMin(h.open_time))) / 60) * 60;
+        const to = Math.ceil(Math.max(...openDays.value.map(h => timeToMin(h.close_time))) / 60) * 60;
+        return { from, to: Math.max(to, from + 60) };
+      });
+      const scaleMid = computed(() => Math.round((scale.value.from + scale.value.to) / 120) * 60);
+      function barStyle(h) {
+        const { from, to } = scale.value, width = to - from;
+        const offset = (timeToMin(h.open_time) - from) / width * 100;
+        return { insetInlineStart: offset + '%', width: Math.max(span(h) / width * 100, 2) + '%' };
+      }
+      const longestDay = computed(() => {
+        let best = null;
+        for (const h of openDays.value) if (!best || span(h) > span(best)) best = h;
+        return best;
+      });
+      const avgService = computed(() => {
+        const d = (store.services || []).map(s => s.duration_minutes).filter(Boolean);
+        return d.length ? Math.round(d.reduce((a, b) => a + b, 0) / d.length) : 0;
+      });
+      const capacity = computed(() => avgService.value ? Math.floor(weeklyMinutes.value / avgService.value) : 0);
 
-    async function saveInfo(){
-      savingInfo.value = true;
-      const { error } = await supa.from('business_settings')
-        .update({ business_name: name.value.trim(), owner_email: email.value.trim() }).eq('id',1);
-      savingInfo.value = false;
-      if (error){ showToast(friendlyError(error),'err'); return; }
-      store.settings = { ...store.settings, business_name:name.value.trim(), owner_email:email.value.trim() };
-      showToast('הפרטים נשמרו');
-    }
-    async function saveHours(){
-      savingHours.value = true;
-      try{
-        for (const h of hours){
-          const { error } = await supa.from('business_hours')
-            .update({ is_open:h.is_open, open_time:h.open_time, close_time:h.close_time })
-            .eq('day_of_week', h.day_of_week);
+      async function sendReportNow() {
+        sendingReport.value = true;
+        try {
+          const { data, error } = await supa.functions.invoke('daily-schedule-email', { method: 'POST' });
           if (error) throw error;
+          if (data && data.ok === false) throw new Error(data.error || 'שליחת הדוח נכשלה');
+          showToast(`הדוח של היום נשלח בהצלחה (${data?.count ?? 0} תורים)`);
+        } catch (err) {
+          showToast(friendlyError(err), 'err');
+        } finally {
+          sendingReport.value = false;
         }
-        store.businessHours = hours.map(h=>({...h}));
-        showToast('שעות הפעילות נשמרו');
-      }catch(err){ showToast(friendlyError(err),'err'); }
-      finally{ savingHours.value = false; }
-    }
-    return { name, email, savingInfo, hours, savingHours, sendingReport, saveInfo, saveHours, sendReportNow, WEEKDAYS };
-  },
-  template: `
-  <div style="display:flex;flex-direction:column;gap:18px">
+      }
+
+      async function saveInfo() {
+        savingInfo.value = true;
+        const { error } = await supa.from('business_settings')
+          .update({ business_name: name.value.trim(), owner_email: email.value.trim() }).eq('id', 1);
+        savingInfo.value = false;
+        if (error) { showToast(friendlyError(error), 'err'); return; }
+        store.settings = { ...store.settings, business_name: name.value.trim(), owner_email: email.value.trim() };
+        showToast('הפרטים נשמרו');
+      }
+      async function saveHours() {
+        savingHours.value = true;
+        try {
+          for (const h of hours) {
+            const { error } = await supa.from('business_hours')
+              .update({ is_open: h.is_open, open_time: h.open_time, close_time: h.close_time })
+              .eq('day_of_week', h.day_of_week);
+            if (error) throw error;
+          }
+          store.businessHours = hours.map(h => ({ ...h }));
+          showToast('שעות הפעילות נשמרו');
+        } catch (err) { showToast(friendlyError(err), 'err'); }
+        finally { savingHours.value = false; }
+      }
+      return {
+        name, email, savingInfo, hours, savingHours, sendingReport, saveInfo, saveHours, sendReportNow,
+        openDays, weeklyHoursLabel, scale, scaleMid, barStyle, longestDay, avgService, capacity, span,
+        WEEKDAYS, fmtTime, minToTime, Math,
+      };
+    },
+    template: `
+  <div class="settings-grid">
     <div class="card settings-block">
       <div>
         <p class="section-title">פרטי העסק</p>
         <p class="section-sub">כתובת המייל כאן היא היעד לדוח התורים היומי שנשלח כל בוקר ב-07:00.</p>
       </div>
-      <div class="form-row-2 form-row-2--with-btn">
+      <div class="form-row-2 form-row-2--with-btn" style="margin-top:auto">
         <div class="field" style="margin-bottom:0"><label for="s-name">שם העסק</label><input id="s-name" type="text" v-model="name"></div>
-        <div class="field" style="margin-bottom:0"><label for="s-email">אימייל לקבלת דוח יומי</label><input id="s-email" type="email" v-model="email" dir="ltr" style="text-align:left"></div>
-        <button class="btn btn-primary" style="height:44px; padding-block:0; white-space:nowrap; justify-self:start" :disabled="savingInfo" @click="saveInfo">{{ savingInfo?'שומרת…':'שמירה' }}</button>
+        <div class="field" style="margin-bottom:0"><label for="s-email">אימייל לדוח היומי</label><input id="s-email" type="email" v-model="email" dir="ltr" style="text-align:left"></div>
+        <button class="btn btn-primary" style="height:44px;padding-block:0" :disabled="savingInfo" @click="saveInfo">{{ savingInfo?'שומרת…':'שמירה' }}</button>
       </div>
     </div>
+
     <div class="card settings-block">
       <div>
         <p class="section-title">דוח יומי</p>
-        <p class="section-sub">לא רוצה לחכות ל-07:00? אפשר לשלוח את דוח התורים של היום לאימייל שלמעלה עכשיו.</p>
+        <p class="section-sub">הדוח יוצא אוטומטית כל בוקר ב-07:00 לכתובת שלמעלה. לא רוצה לחכות? אפשר לשלוח את דוח התורים של היום עכשיו.</p>
       </div>
-      <button class="btn btn-ghost" style="align-self:flex-start;padding-inline:22px" :disabled="sendingReport" @click="sendReportNow">
+      <button class="btn btn-ghost" style="align-self:flex-start;padding-inline:22px;margin-top:auto" :disabled="sendingReport" @click="sendReportNow">
         <icon name="calendar" size="16"/>{{ sendingReport?'שולחת…':'שליחת הדוח של היום עכשיו' }}
       </button>
     </div>
+
     <div class="card settings-block">
       <div>
         <p class="section-title">שעות פעילות</p>
@@ -929,39 +1927,68 @@ const SettingsView = {
           <span class="closed-label" v-else>סגור</span>
         </div>
       </div>
-      <button class="btn btn-primary" style="align-self:flex-start;padding-inline:22px" :disabled="savingHours" @click="saveHours">{{ savingHours?'שומרת…':'שמירת שעות' }}</button>
+      <button class="btn btn-primary" style="align-self:flex-start;padding-inline:22px;margin-top:auto" :disabled="savingHours" @click="saveHours">{{ savingHours?'שומרת…':'שמירת שעות' }}</button>
+    </div>
+
+    <div class="card settings-block">
+      <div>
+        <p class="section-title">השבוע במבט אחד</p>
+        <p class="section-sub">תמונת מצב של שבוע העבודה, מתעדכנת בזמן אמת לפי השעות שבצד.</p>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><div class="v">{{ weeklyHoursLabel }}</div><div class="k">שעות פתיחה בשבוע</div></div>
+        <div class="stat"><div class="v">{{ openDays.length }}</div><div class="k">ימי עבודה</div></div>
+        <div class="stat"><div class="v">{{ longestDay ? WEEKDAYS[longestDay.day_of_week] : '—' }}</div><div class="k">היום הארוך בשבוע</div></div>
+      </div>
+      <div class="week-bars">
+        <div class="week-bar" :class="{off:!h.is_open}" v-for="h in hours" :key="h.day_of_week"
+          :title="h.is_open ? WEEKDAYS[h.day_of_week] + ': ' + fmtTime(h.open_time) + '–' + fmtTime(h.close_time) : WEEKDAYS[h.day_of_week] + ': סגור'">
+          <span class="wb-day">{{ WEEKDAYS[h.day_of_week] }}</span>
+          <span class="track"><span class="fill" v-if="span(h)" :style="barStyle(h)"></span></span>
+          <span class="wb-note">{{ h.is_open ? Math.round(span(h) / 6) / 10 + 'ש׳' : '—' }}</span>
+        </div>
+      </div>
+      <div class="scale-row">
+        <span>{{ minToTime(scale.from) }}</span>
+        <span>{{ minToTime(scaleMid) }}</span>
+        <span>{{ minToTime(scale.to) }}</span>
+      </div>
+      <p class="hint" style="margin-top:auto" v-if="capacity">
+        משך טיפול ממוצע {{ avgService }} דק׳ — יש מקום לכ-{{ capacity }} תורים בשבוע.
+      </p>
+      <p class="hint" style="margin-top:auto" v-else>אחרי שמוסיפים טיפולים נראה כאן גם כמה תורים נכנסים בשבוע.</p>
     </div>
   </div>`
-};
+  };
 
-/* ---------------- App shell ---------------- */
-const AppShell = {
-  components: { TodayView, WeekView, ServicesView, SettingsView, AppointmentModal },
-  setup(){
-    const view = ref('today');
-    const selectedDate = ref(new Date());
-    const modalOpen = ref(false);
-    const editingAppt = ref(null);
+  /* ---------------- App shell ---------------- */
+  const AppShell = {
+    components: { TodayView, MonthView, ServicesView, SettingsView, AppointmentModal },
+    setup() {
+      const view = ref('today');
+      const selectedDate = ref(new Date());
+      const modalOpen = ref(false);
+      const editingAppt = ref(null);
 
-    function openNew(){ editingAppt.value = null; modalOpen.value = true; }
-    function openEdit(appt){ editingAppt.value = appt; modalOpen.value = true; }
-    function closeModal(){ modalOpen.value = false; editingAppt.value = null; }
-    function onSaved(){ closeModal(); }
-    function openDayFromWeek(d){ selectedDate.value = d; view.value = 'today'; }
+      function openNew() { editingAppt.value = null; modalOpen.value = true; }
+      function openEdit(appt) { editingAppt.value = appt; modalOpen.value = true; }
+      function closeModal() { modalOpen.value = false; editingAppt.value = null; }
+      function onSaved() { closeModal(); }
+      function openDay(d) { selectedDate.value = d; view.value = 'today'; }
 
-    async function logout(){ await supa.auth.signOut(); store.session = null; }
+      async function logout() { await supa.auth.signOut(); store.session = null; }
 
-    const titles = { today:'היום', week:'השבוע', services:'הטיפולים שלי', settings:'הגדרות' };
-    const subtitle = computed(()=> view.value==='today' ? heDate(selectedDate.value) : '');
+      const titles = { today: 'היום', month: 'החודש', services: 'הטיפולים שלי', settings: 'הגדרות' };
+      const subtitle = computed(() => view.value === 'today' ? heDate(selectedDate.value) : '');
 
-    return { view, selectedDate, modalOpen, editingAppt, openNew, openEdit, closeModal, onSaved, openDayFromWeek, logout, titles, subtitle, store };
-  },
-  template: `
+      return { view, selectedDate, modalOpen, editingAppt, openNew, openEdit, closeModal, onSaved, openDay, logout, titles, subtitle, store, toISODate };
+    },
+    template: `
   <div class="shell">
     <aside class="sidebar">
       <div class="brand"><div class="mark">G</div><span>Glow Studio</span></div>
       <button class="nav-item" :class="{active:view==='today'}" @click="view='today'"><span class="ic"><icon name="calendar" size="18"/></span>היום</button>
-      <button class="nav-item" :class="{active:view==='week'}" @click="view='week'"><span class="ic"><icon name="calendar-week" size="18"/></span>השבוע</button>
+      <button class="nav-item" :class="{active:view==='month'}" @click="view='month'"><span class="ic"><icon name="calendar-week" size="18"/></span>החודש</button>
       <button class="nav-item" :class="{active:view==='services'}" @click="view='services'"><span class="ic"><icon name="sparkles" size="18"/></span>טיפולים</button>
       <button class="nav-item" :class="{active:view==='settings'}" @click="view='settings'"><span class="ic"><icon name="sliders" size="18"/></span>הגדרות</button>
       <div class="sidebar-footer">
@@ -977,48 +2004,48 @@ const AppShell = {
           <div class="sub" v-if="subtitle">{{ subtitle }}</div>
         </div>
       </div>
-      <div class="content">
+      <div class="content" :class="{'has-fab': view==='today' || view==='month'}">
         <today-view v-if="view==='today'" :selected="selectedDate" @update:selected="selectedDate=$event" @new-appt="openNew" @edit-appt="openEdit" />
-        <week-view v-else-if="view==='week'" @open-day="openDayFromWeek" />
+        <month-view v-else-if="view==='month'" :selected="selectedDate" @update:selected="selectedDate=$event" @open-day="openDay" />
         <services-view v-else-if="view==='services'" />
         <settings-view v-else-if="view==='settings'" />
       </div>
     </div>
 
-    <button class="fab" @click="openNew" v-if="view==='today' || view==='week'"><icon name="plus" size="17"/> תור חדש</button>
+    <button class="fab" @click="openNew" v-if="view==='today' || view==='month'"><icon name="plus" size="17"/> תור חדש</button>
 
     <nav class="tabbar">
       <button :class="{active:view==='today'}" @click="view='today'"><span class="ic"><icon name="calendar" size="18"/></span>היום</button>
-      <button :class="{active:view==='week'}" @click="view='week'"><span class="ic"><icon name="calendar-week" size="18"/></span>השבוע</button>
+      <button :class="{active:view==='month'}" @click="view='month'"><span class="ic"><icon name="calendar-week" size="18"/></span>החודש</button>
       <button :class="{active:view==='services'}" @click="view='services'"><span class="ic"><icon name="sparkles" size="18"/></span>טיפולים</button>
       <button :class="{active:view==='settings'}" @click="view='settings'"><span class="ic"><icon name="sliders" size="18"/></span>הגדרות</button>
     </nav>
 
-    <appointment-modal v-if="modalOpen" :editing="editingAppt" @close="closeModal" @saved="onSaved" />
+    <appointment-modal v-if="modalOpen" :editing="editingAppt" :preset-date="toISODate(selectedDate)" @close="closeModal" @saved="onSaved" />
   </div>`
-};
+  };
 
-/* ---------------- Root ---------------- */
-const Root = {
-  components: { LoginView, AppShell },
-  setup(){
-    const checkingSession = ref(true);
+  /* ---------------- Root ---------------- */
+  const Root = {
+    components: { LoginView, AppShell },
+    setup() {
+      const checkingSession = ref(true);
 
-    onMounted(async ()=>{
-      if (supa){
-        const { data } = await supa.auth.getSession();
-        store.session = data.session;
-        supa.auth.onAuthStateChange((_event, session)=>{ store.session = session; });
-        if (store.session) await loadStaticData();
-      }
-      checkingSession.value = false;
-    });
+      onMounted(async () => {
+        if (supa) {
+          const { data } = await supa.auth.getSession();
+          store.session = data.session;
+          supa.auth.onAuthStateChange((_event, session) => { store.session = session; });
+          if (store.session) await loadStaticData();
+        }
+        checkingSession.value = false;
+      });
 
-    watch(()=>store.session, async (s)=>{ if (s) await loadStaticData(); });
+      watch(() => store.session, async (s) => { if (s) await loadStaticData(); });
 
-    return { checkingSession, store, toast };
-  },
-  template: `
+      return { checkingSession, store, toast };
+    },
+    template: `
   <div v-if="checkingSession"></div>
   <login-view v-else-if="!store.session" />
   <div v-else-if="store.bootError" class="login-screen">
@@ -1029,9 +2056,9 @@ const Root = {
   </div>
   <app-shell v-else />
   <div class="toast" :class="toast.type==='err'?'err':'ok'" v-if="toast.show">{{ toast.msg }}</div>`
-};
+  };
 
-const app = createApp(Root);
-app.component('icon', Icon);
-app.mount('#app');
+  const app = createApp(Root);
+  app.component('icon', Icon);
+  app.mount('#app');
 </script>
