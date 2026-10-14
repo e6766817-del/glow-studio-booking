@@ -35,3 +35,27 @@ select cron.schedule(
 --   select cron.unschedule('daily-schedule-email');
 -- To rotate the stored key later:
 --   select vault.update_secret((select id from vault.secrets where name='daily_email_service_key'), '<new key>');
+
+-- ── debt reminders ──────────────────────────────────────────────────────────
+-- Runs once a day and reminds about every open debt whose last reminder is a
+-- week or more old; each debt keeps its own 7-day clock inside the function,
+-- so this job only has to come round daily. The first reminder is sent by the
+-- app the moment the debt is entered.
+select cron.schedule(
+  'debt-reminders',
+  '0 6 * * *',  -- 06:00 UTC = 09:00 Israel time in summer (DST) / 08:00 in winter
+  $$
+  select net.http_post(
+    url := 'https://hmnufsmusrgadbetpsaq.supabase.co/functions/v1/debt-reminders',
+    headers := jsonb_build_object(
+      'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'daily_email_service_key'),
+      'Content-Type', 'application/json'
+    ),
+    body := '{}'::jsonb
+  );
+  $$
+);
+
+-- To check / unschedule later:
+--   select * from cron.job;
+--   select cron.unschedule('debt-reminders');

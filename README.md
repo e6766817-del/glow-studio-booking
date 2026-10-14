@@ -7,15 +7,31 @@
 - **אפיון מלא:** מסמך אפיון נפרד (קישור נמסר בנפרד).
 - **בסיס נתונים:** Supabase (Postgres + Auth + RLS) – ראו `supabase/schema.sql`.
 - **מייל יומי אוטומטי:** Supabase Edge Function + pg_cron + Resend – ראו `supabase/functions/daily-schedule-email`.
+- **מסך חובות ותזכורות:** תשלומים שלא בוצעו, עם תזכורת במייל ללקוחה מיד עם רישום החוב ואז כל שבוע עד
+  לסימון כשולם – ראו `supabase/functions/debt-reminders`.
 
 ## מבנה הפרויקט
 
 ```
 index.html                                   אתר הניהול (Vue 3 + supabase-js)
 supabase/schema.sql                           טבלאות, נתוני זרע, RLS
-supabase/schedule-cron.sql                    תזמון המייל היומי (pg_cron)
+supabase/add-debts.sql                        הוספת טבלת החובות לפרויקט קיים
+supabase/schedule-cron.sql                    תזמון המייל היומי ותזכורות החובות (pg_cron)
 supabase/functions/daily-schedule-email/      פונקציית ה-Edge ששולחת את המייל
+supabase/functions/debt-reminders/            פונקציית ה-Edge ששולחת תזכורות על חובות
 ```
+
+## הפעלת מסך החובות
+
+הקוד כבר באתר; צריך להריץ פעם אחת את החלקים שבצד השרת:
+
+1. להריץ את `supabase/add-debts.sql` ב-SQL editor של Supabase (יוצר את טבלת `debts`).
+2. לפרוס את הפונקציה: `supabase functions deploy debt-reminders`
+   (משתמשת באותם secrets של Resend כמו הדוח היומי).
+3. לתזמן את הסריקה היומית – הבלוק של `debt-reminders` ב-`supabase/schedule-cron.sql`.
+
+עד שלב 1 המסך יוצג ריק; שאר המערכת עובדת כרגיל. תזכורות נשלחות רק ללקוחות
+שרשומה להן כתובת מייל.
 
 ## הרצה מקומית
 

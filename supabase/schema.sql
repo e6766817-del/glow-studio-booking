@@ -60,6 +60,30 @@ create table business_settings (
 insert into business_settings (id, business_name, owner_email) values
   (1, 'Glow Studio', 'e6766817@gmail.com');
 
+-- ── debts ─────────────────────────────────────────────────────────
+-- Money a client still owes after a treatment. Reminders are emailed to the
+-- client, so client_email is what decides whether a debt can be chased
+-- automatically - see supabase/functions/debt-reminders.
+create table debts (
+  id uuid primary key default gen_random_uuid(),
+  client_name text not null,
+  client_phone text not null,
+  client_email text,                       -- no email => no automatic reminders
+  appointment_id uuid references appointments(id) on delete set null,
+  service_id uuid references services(id) on delete set null,
+  amount numeric(10,2) not null check (amount > 0),
+  treatment_date date not null default current_date,
+  notes text,
+  status text not null default 'open' check (status in ('open', 'paid')),
+  paid_at timestamptz,
+  reminders_sent int not null default 0,
+  last_reminder_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+-- the reminder sweep's working set: open debts, oldest reminder first
+create index debts_open_idx on debts (last_reminder_at) where status = 'open';
+
 -- ── seed services ──────────────────────────────────────────────────────────
 insert into services (name, duration_minutes, price, sort_order) values
   ('עיצוב גבות', 15, 40, 1),
@@ -83,6 +107,7 @@ alter table services enable row level security;
 alter table appointments enable row level security;
 alter table business_hours enable row level security;
 alter table business_settings enable row level security;
+alter table debts enable row level security;
 
 create policy "authenticated full access" on services
   for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
@@ -94,4 +119,7 @@ create policy "authenticated full access" on business_hours
   for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 create policy "authenticated full access" on business_settings
+  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+
+create policy "authenticated full access" on debts
   for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');

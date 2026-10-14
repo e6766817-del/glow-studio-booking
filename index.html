@@ -30,6 +30,9 @@
     --warning: #b1792c;
     --warning-soft: #faf0df;
     --shadow: 0 1px 2px rgba(44, 34, 34, .04), 0 8px 24px -12px rgba(44, 34, 34, .18);
+    --hero-from: #b5466f;
+    --hero-to: #7e2f4d;
+    --hero-text: #fff;
     --font-display: 'Frank Ruhl Libre', Georgia, 'Times New Roman', serif;
     --font-body: 'Heebo', Arial, sans-serif;
     color-scheme: light;
@@ -53,6 +56,9 @@
       --warning: #dcae6b;
       --warning-soft: #392e1e;
       --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .5);
+      --hero-from: #7d3853;
+      --hero-to: #44202f;
+      --hero-text: #fdeef4;
       color-scheme: dark;
     }
   }
@@ -74,6 +80,9 @@
     --warning: #dcae6b;
     --warning-soft: #392e1e;
     --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .5);
+    --hero-from: #7d3853;
+    --hero-to: #44202f;
+    --hero-text: #fdeef4;
     color-scheme: dark;
   }
 
@@ -542,6 +551,11 @@
     color: var(--text);
   }
 
+  .icon-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+
   .badge {
     font-size: 11px;
     font-weight: 700;
@@ -985,6 +999,17 @@
     }
   }
 
+  /* the hero drops to its own row, the three tiles share the next one */
+  @media (max-width: 1100px) {
+    .debt-summary {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .debt-hero {
+      grid-column: 1 / -1;
+    }
+  }
+
   .stat-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1105,6 +1130,289 @@
   .hours-row .closed-label {
     color: var(--text-soft);
     font-size: 13px;
+  }
+
+  /* ---------- Debts ---------- */
+  .debts-view {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* summary: one filled hero card for the number that matters, three quiet
+     tiles for the context around it */
+  .debt-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    flex-shrink: 0;
+  }
+
+  .debt-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    padding: 18px 20px;
+    background: linear-gradient(135deg, var(--hero-from), var(--hero-to));
+    color: var(--hero-text);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  /* oversized wallet behind the figure, barely there */
+  .debt-hero .watermark {
+    position: absolute;
+    inset-inline-end: -14px;
+    bottom: -22px;
+    opacity: .13;
+    pointer-events: none;
+  }
+
+  .debt-hero .dh-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    opacity: .82;
+  }
+
+  .debt-hero .dh-value {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .debt-hero .dh-value .cur {
+    font-size: 19px;
+    font-weight: 500;
+    opacity: .85;
+    margin-inline-start: 3px;
+  }
+
+  .debt-hero .dh-sub {
+    font-size: 12.5px;
+    opacity: .82;
+    margin-top: 2px;
+  }
+
+  .debt-tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .debt-tile .dt-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-soft);
+  }
+
+  .debt-tile .dt-value {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+  }
+
+  .debt-tile .dt-sub {
+    font-size: 11.5px;
+    color: var(--text-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* toolbar: segmented filter on one side, the manual sweep on the other */
+  .debt-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+
+  .seg {
+    display: inline-flex;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .seg button {
+    border: none;
+    background: none;
+    border-radius: 999px;
+    padding: 7px 15px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-soft);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .seg button:hover:not(.on) {
+    color: var(--text);
+  }
+
+  .seg button.on {
+    background: var(--surface);
+    color: var(--accent-dark);
+    box-shadow: 0 1px 2px rgba(44, 34, 34, .08);
+  }
+
+  .debt-toolbar .spacer {
+    flex: 1;
+  }
+
+  .debt-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .debt-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 15px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .debt-row:last-child {
+    border-bottom: none;
+  }
+
+  .debt-amount {
+    width: 96px;
+    flex-shrink: 0;
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--accent-dark);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .debt-amount .cur {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: .7;
+    margin-inline-start: 2px;
+  }
+
+  .debt-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .debt-main .client {
+    font-weight: 700;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .debt-main .svc {
+    color: var(--text-soft);
+    font-size: 12.5px;
+    margin-top: 2px;
+  }
+
+  .debt-main .notes {
+    color: var(--text-soft);
+    font-size: 12px;
+    margin-top: 3px;
+    font-style: italic;
+  }
+
+  /* the reminder trail -- the one line that says whether chasing is happening */
+  .debt-rem {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    font-weight: 600;
+    margin-top: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--surface-alt);
+    color: var(--text-soft);
+  }
+
+  .debt-rem.sent {
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+  }
+
+  .debt-rem.warn {
+    background: var(--warning-soft);
+    color: var(--warning);
+  }
+
+  .debt-phone {
+    font-size: 12.5px;
+    color: var(--text-soft);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .debt-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .debt-row.paid {
+    background: var(--bg);
+  }
+
+  .debt-row.paid .debt-amount {
+    color: var(--text-soft);
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+  }
+
+  .debt-row.paid .debt-main .client {
+    color: var(--text-soft);
+  }
+
+  .badge-paid {
+    background: var(--success-soft);
+    color: var(--success);
+  }
+
+  .badge-open {
+    background: var(--warning-soft);
+    color: var(--warning);
+  }
+
+  /* count of open debts, on the nav entry */
+  .nav-item .count {
+    margin-inline-start: auto;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 999px;
+    min-width: 20px;
+    padding: 1px 6px;
+    text-align: center;
+  }
+
+  .nav-item.active .count {
+    background: var(--accent-dark);
   }
 
   /* ---------- Toast ---------- */
@@ -1263,6 +1571,54 @@
       padding-inline-start: 108px;
     }
 
+    .debt-summary {
+      gap: 10px;
+    }
+
+    .debt-hero {
+      padding: 16px 18px;
+    }
+
+    .debt-hero .dh-value {
+      font-size: 28px;
+    }
+
+    .debt-tile {
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .debt-tile .dt-value {
+      font-size: 17px;
+    }
+
+    .debt-row {
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      padding: 14px 16px;
+    }
+
+    .debt-amount {
+      width: auto;
+      order: 1;
+    }
+
+    .debt-main {
+      order: 3;
+      flex-basis: 100%;
+    }
+
+    .debt-phone {
+      order: 2;
+      margin-inline-start: auto;
+    }
+
+    .debt-actions {
+      order: 4;
+      width: 100%;
+      justify-content: flex-end;
+    }
+
     .svc-table {
       display: block;
       overflow-x: auto;
@@ -1290,6 +1646,10 @@
     'alert-triangle': '<polygon points="12,3 22,20 2,20"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/>',
     'empty-calendar': '<rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="7.5" y1="14" x2="7.51" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16.5" y1="14" x2="16.51" y2="14"/>',
     plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+    wallet: '<path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H17a2 2 0 0 1 2 2v.5"/><rect x="3" y="7.5" width="18" height="12" rx="2.5"/><path d="M15.5 13.5h3"/>',
+    mail: '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><polyline points="3.5 7.5 12 13.5 20.5 7.5"/>',
+    trash: '<polyline points="4 7 20 7"/><path d="M9.5 7V4.6h5V7"/><path d="M6.2 7l.9 12.4h9.8L17.8 7"/>',
+    'check-circle': '<circle cx="12" cy="12" r="9"/><polyline points="8 12.2 11 15 16 9.5"/>',
     list: '<circle cx="4.5" cy="6" r="1.1" fill="currentColor" stroke="none"/><line x1="9" y1="6" x2="20" y2="6"/><circle cx="4.5" cy="12" r="1.1" fill="currentColor" stroke="none"/><line x1="9" y1="12" x2="20" y2="12"/><circle cx="4.5" cy="18" r="1.1" fill="currentColor" stroke="none"/><line x1="9" y1="18" x2="20" y2="18"/>',
   };
   const Icon = {
@@ -1334,6 +1694,8 @@
     services: [],
     businessHours: [],
     settings: null,
+    debts: [],        // every debt, newest first -- the screen filters locally
+    debtsReady: true, // false until supabase/add-debts.sql has been run
     byDate: {},       // 'YYYY-MM-DD' -> appointments[]
     loadingStatic: false,
     bootError: '',
@@ -1352,6 +1714,7 @@
     const msg = (err && (err.message || err.error_description)) || 'משהו השתבש, נסי שוב.';
     if (/Invalid login credentials/i.test(msg)) return 'אימייל או סיסמה שגויים.';
     if (/Failed to fetch/i.test(msg)) return 'בעיית חיבור לשרת. בדקי את החיבור לאינטרנט ונסי שוב.';
+    if (isMissingDebtsTable(err)) return 'טבלת החובות עוד לא נוצרה בבסיס הנתונים. יש להריץ את supabase/add-debts.sql ב-SQL editor של Supabase.';
     return msg;
   }
 
@@ -1359,10 +1722,11 @@
     if (!supa) { store.bootError = 'החיבור ל-Supabase עדיין לא הוגדר.'; return; }
     store.loadingStatic = true;
     try {
-      const [svcRes, hoursRes, settingsRes] = await Promise.all([
+      const [svcRes, hoursRes, settingsRes, debtsRes] = await Promise.all([
         supa.from('services').select('*').eq('active', true).order('sort_order'),
         supa.from('business_hours').select('*').order('day_of_week'),
         supa.from('business_settings').select('*').eq('id', 1).single(),
+        debtsQuery(),
       ]);
       if (svcRes.error) throw svcRes.error;
       if (hoursRes.error) throw hoursRes.error;
@@ -1370,11 +1734,62 @@
       store.services = svcRes.data || [];
       store.businessHours = hoursRes.data || [];
       store.settings = settingsRes.data || null;
+      if (debtsRes.error) {
+        console.warn('debts unavailable:', debtsRes.error.message);
+        store.debtsReady = !isMissingDebtsTable(debtsRes.error);
+      }
+      store.debts = debtsRes.data || [];
     } catch (err) {
       store.bootError = friendlyError(err);
     } finally {
       store.loadingStatic = false;
     }
+  }
+
+  /* ---------------- debts ---------------- */
+  // A solo studio accumulates a handful of these a month, so the whole list
+  // comes down at once and every filter and total below is computed locally.
+  // Until add-debts.sql is run the table simply is not there; PostgREST says so
+  // either by code (PGRST205 / 42P01) or in the message.
+  function isMissingDebtsTable(err) {
+    if (!err) return false;
+    if (err.code === 'PGRST205' || err.code === '42P01') return true;
+    return /schema cache|relation .*debts.* does not exist/i.test(err.message || '');
+  }
+
+  function debtsQuery() {
+    return supa.from('debts').select('*, services(name)')
+      .order('treatment_date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(500);
+  }
+
+  async function loadDebts() {
+    if (!supa) return;
+    const { data, error } = await debtsQuery();
+    if (error) {
+      store.debtsReady = !isMissingDebtsTable(error);
+      // the screen explains the missing table on its own, no need to shout
+      if (store.debtsReady) showToast(friendlyError(error), 'err');
+      return;
+    }
+    store.debtsReady = true;
+    store.debts = data || [];
+  }
+
+  const openDebts = () => store.debts.filter(d => d.status === 'open');
+
+  // must match REMINDER_INTERVAL_DAYS in the debt-reminders Edge Function
+  const REMINDER_INTERVAL_DAYS = 7;
+
+  function fmtMoney(n) {
+    const v = Number(n) || 0;
+    return (Number.isInteger(v) ? v : Number(v.toFixed(2))).toLocaleString('he-IL');
+  }
+  function fmtISO(iso) { const [y, m, d] = iso.split('-'); return `${+d}/${+m}/${y}`; }
+  function daysSince(iso) {
+    const ms = parseISODate(iso.slice(0, 10)).getTime();
+    return Math.max(0, Math.round((parseISODate(todayISO()).getTime() - ms) / 86400000));
   }
 
   async function loadAllServices() { // includes inactive, for the services screen
@@ -1789,6 +2204,364 @@
   </div>`
   };
 
+  /* ---------------- New / Edit debt modal ---------------- */
+  const DebtModal = {
+    props: ['editing'],
+    emits: ['close', 'saved'],
+    setup(props, { emit }) {
+      const isEdit = computed(() => !!props.editing);
+      const e = props.editing;
+      const form = reactive({
+        client_name: e ? e.client_name : '',
+        client_phone: e ? e.client_phone : '',
+        client_email: e ? (e.client_email || '') : '',
+        amount: e ? e.amount : '',
+        treatment_date: e ? e.treatment_date : todayISO(),
+        notes: e ? (e.notes || '') : '',
+        service_id: e ? (e.service_id || '') : '',
+        appointment_id: e ? (e.appointment_id || '') : '',
+      });
+      const saving = ref(false);
+      const recent = ref([]);
+      const pickedAppt = ref('');
+
+      // Most debts follow a treatment that is already in the system, so the
+      // last three months of appointments can fill the whole form in one pick.
+      onMounted(async () => {
+        if (isEdit.value || !supa) return;
+        const { data } = await supa.from('appointments')
+          .select('id, client_name, client_phone, appointment_date, service_id, services(name, price)')
+          .gte('appointment_date', toISODate(addDays(new Date(), -90)))
+          .lte('appointment_date', todayISO())
+          .neq('status', 'cancelled')
+          .order('appointment_date', { ascending: false })
+          .limit(60);
+        recent.value = data || [];
+      });
+
+      function applyAppointment(id) {
+        const a = recent.value.find(x => x.id === id);
+        if (!a) return;
+        form.client_name = a.client_name;
+        form.client_phone = a.client_phone;
+        form.treatment_date = a.appointment_date;
+        form.service_id = a.service_id || '';
+        form.appointment_id = a.id;
+        if (a.services && a.services.price != null) form.amount = a.services.price;
+      }
+
+      const emailLooksValid = computed(() => {
+        const v = form.client_email.trim();
+        return !v || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+      });
+
+      async function save() {
+        if (!form.client_name.trim() || !form.client_phone.trim()) { showToast('נא למלא שם וטלפון', 'err'); return; }
+        if (!(Number(form.amount) > 0)) { showToast('נא למלא סכום חוב', 'err'); return; }
+        if (!emailLooksValid.value) { showToast('כתובת המייל לא נראית תקינה', 'err'); return; }
+
+        const payload = {
+          client_name: form.client_name.trim(),
+          client_phone: form.client_phone.trim(),
+          client_email: form.client_email.trim() || null,
+          amount: Number(form.amount),
+          treatment_date: form.treatment_date,
+          notes: form.notes.trim() || null,
+          service_id: form.service_id || null,
+          appointment_id: form.appointment_id || null,
+        };
+
+        saving.value = true;
+        try {
+          if (isEdit.value) {
+            const { error } = await supa.from('debts').update(payload).eq('id', props.editing.id);
+            if (error) throw error;
+            showToast('החוב עודכן');
+          } else {
+            const { data, error } = await supa.from('debts').insert(payload).select('id').single();
+            if (error) throw error;
+            if (!payload.client_email) {
+              showToast('החוב נשמר. בלי כתובת מייל לא יישלחו תזכורות');
+            } else {
+              // first reminder goes out now; the weekly ones are the cron job's
+              try {
+                const res = await supa.functions.invoke('debt-reminders', { body: { debt_id: data.id } });
+                if (res.error) throw res.error;
+                if (res.data && res.data.ok === false) throw new Error(describeSendFailure(res.data));
+                showToast('החוב נשמר והתזכורת הראשונה נשלחה');
+              } catch (sendErr) {
+                showToast('החוב נשמר, אבל שליחת התזכורת נכשלה: ' + friendlyError(sendErr), 'err');
+              }
+            }
+          }
+          emit('saved');
+        } catch (err) {
+          showToast(friendlyError(err), 'err');
+        } finally {
+          saving.value = false;
+        }
+      }
+
+      return { isEdit, form, saving, recent, pickedAppt, applyAppointment, emailLooksValid, save, fmtISO };
+    },
+    template: `
+  <div class="overlay" @click.self="$emit('close')">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>{{ isEdit ? 'עריכת חוב' : 'חוב חדש' }}</h3>
+        <button class="icon-btn" title="סגירה" @click="$emit('close')"><icon name="x" size="16"/></button>
+      </div>
+      <div class="form-grid">
+        <div class="field" style="margin-bottom:0" v-if="!isEdit && recent.length">
+          <label for="d-appt">מתוך תור קיים (ממלא את הפרטים)</label>
+          <select id="d-appt" v-model="pickedAppt" @change="applyAppointment($event.target.value)">
+            <option value="">בחירה ידנית</option>
+            <option v-for="a in recent" :key="a.id" :value="a.id">
+              {{ a.client_name }} · {{ a.services && a.services.name }} · {{ fmtISO(a.appointment_date) }}
+            </option>
+          </select>
+        </div>
+        <div class="form-row-2">
+          <div class="field" style="margin-bottom:0">
+            <label for="d-name">שם הלקוחה</label>
+            <input id="d-name" type="text" v-model="form.client_name">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label for="d-phone">טלפון</label>
+            <input id="d-phone" type="tel" v-model="form.client_phone" dir="ltr" style="text-align:left">
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="field" style="margin-bottom:0">
+            <label for="d-amount">סכום החוב (₪)</label>
+            <input id="d-amount" type="number" min="1" step="1" v-model="form.amount">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label for="d-date">תאריך הטיפול</label>
+            <input id="d-date" type="date" v-model="form.treatment_date">
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label for="d-email">אימייל הלקוחה (ליעד התזכורות)</label>
+          <input id="d-email" type="email" v-model="form.client_email" dir="ltr" style="text-align:left"
+            placeholder="dana@example.com">
+          <div class="hint" v-if="form.client_email.trim() && !emailLooksValid" style="color:var(--danger)">
+            הכתובת לא נראית תקינה
+          </div>
+          <div class="hint" v-else-if="form.client_email.trim()">
+            תזכורת נשלחת מיד עם שמירת החוב, ואז שוב כל שבוע עד שהוא מסומן כשולם.
+          </div>
+          <div class="hint" v-else>בלי כתובת מייל לא יישלחו תזכורות אוטומטיות.</div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label for="d-notes">הערות (אופציונלי)</label>
+          <textarea id="d-notes" v-model="form.notes" placeholder="לדוגמה: שילמה חצי במזומן"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" @click="$emit('close')">ביטול</button>
+        <button class="btn btn-primary" :disabled="saving" @click="save">{{ saving ? 'שומרת…' : 'שמירת חוב' }}</button>
+      </div>
+    </div>
+  </div>`
+  };
+
+  // turns the Edge Function's per-debt failure report into one readable line
+  function describeSendFailure(data) {
+    if (data && data.failed && data.failed.length) return data.failed[0].error;
+    return (data && data.error) || 'שליחת התזכורת נכשלה';
+  }
+
+  /* ---------------- Debts view ---------------- */
+  const DebtsView = {
+    emits: ['edit-debt'],
+    setup() {
+      const filter = ref('open');
+      const sendingId = ref('');
+      const sweeping = ref(false);
+
+      onMounted(loadDebts);
+
+      const open = computed(() => store.debts.filter(d => d.status === 'open'));
+      const paid = computed(() => store.debts.filter(d => d.status === 'paid'));
+      const list = computed(() =>
+        filter.value === 'open' ? open.value : filter.value === 'paid' ? paid.value : store.debts);
+
+      const openTotal = computed(() => open.value.reduce((t, d) => t + Number(d.amount), 0));
+      const oldest = computed(() => open.value.reduce(
+        (best, d) => (!best || d.treatment_date < best.treatment_date ? d : best), null));
+      const paidLast30 = computed(() => {
+        const since = toISODate(addDays(new Date(), -30));
+        return paid.value
+          .filter(d => d.paid_at && toISODate(new Date(d.paid_at)) >= since)
+          .reduce((t, d) => t + Number(d.amount), 0);
+      });
+      // what the daily sweep would pick up right now
+      const dueNow = computed(() => open.value.filter(d => d.client_email && (
+        !d.last_reminder_at || daysSince(d.last_reminder_at) >= REMINDER_INTERVAL_DAYS)).length);
+
+      /* --- the one line under each client that says how the chasing is going --- */
+      function reminderCount(n) { return n === 1 ? 'תזכורת אחת' : `${n} תזכורות`; }
+      function remState(d) {
+        if (d.status === 'paid') {
+          return { cls: '', icon: 'check-circle', text: d.reminders_sent
+            ? `שולם · נשלחה ${reminderCount(d.reminders_sent)}` : 'שולם' };
+        }
+        if (!d.client_email) return { cls: 'warn', icon: 'alert-triangle', text: 'אין מייל — לא נשלחות תזכורות' };
+        if (!d.reminders_sent || !d.last_reminder_at) return { cls: '', icon: 'mail', text: 'עדיין לא נשלחה תזכורת' };
+        const next = addDays(parseISODate(d.last_reminder_at.slice(0, 10)), REMINDER_INTERVAL_DAYS);
+        return { cls: 'sent', icon: 'mail', text: `${reminderCount(d.reminders_sent)} · הבאה ב-${fmtISO(toISODate(next))}` };
+      }
+
+      async function togglePaid(d) {
+        const paying = d.status === 'open';
+        const { error } = await supa.from('debts').update({
+          status: paying ? 'paid' : 'open',
+          paid_at: paying ? new Date().toISOString() : null,
+        }).eq('id', d.id);
+        if (error) { showToast(friendlyError(error), 'err'); return; }
+        await loadDebts();
+        showToast(paying ? 'החוב סומן כשולם' : 'החוב חזר למצב פתוח');
+      }
+
+      async function removeDebt(d) {
+        if (!window.confirm(`למחוק את החוב של ${d.client_name} (${fmtMoney(d.amount)} ₪)?`)) return;
+        const { error } = await supa.from('debts').delete().eq('id', d.id);
+        if (error) { showToast(friendlyError(error), 'err'); return; }
+        await loadDebts();
+        showToast('החוב נמחק');
+      }
+
+      async function remindOne(d) {
+        if (!d.client_email) { showToast('אין מייל ללקוחה הזו — אפשר להוסיף אותו בעריכה', 'err'); return; }
+        sendingId.value = d.id;
+        try {
+          const { data, error } = await supa.functions.invoke('debt-reminders', { body: { debt_id: d.id } });
+          if (error) throw error;
+          if (data && data.ok === false) throw new Error(describeSendFailure(data));
+          await loadDebts();
+          showToast(`התזכורת נשלחה ל${d.client_name}`);
+        } catch (err) {
+          showToast(friendlyError(err), 'err');
+        } finally {
+          sendingId.value = '';
+        }
+      }
+
+      // same sweep the cron job runs every morning, on demand
+      async function remindAllDue() {
+        sweeping.value = true;
+        try {
+          const { data, error } = await supa.functions.invoke('debt-reminders', { body: {} });
+          if (error) throw error;
+          if (data && data.ok === false) throw new Error(describeSendFailure(data));
+          await loadDebts();
+          const sent = (data && data.sent) || 0;
+          showToast(sent ? `נשלחו ${sent} תזכורות` : 'אין תזכורות שממתינות לשליחה');
+        } catch (err) {
+          showToast(friendlyError(err), 'err');
+        } finally {
+          sweeping.value = false;
+        }
+      }
+
+      return {
+        filter, list, open, paid, store, openTotal, oldest, paidLast30, dueNow,
+        sendingId, sweeping, remState, togglePaid, removeDebt, remindOne, remindAllDue,
+        fmtMoney, fmtISO, daysSince,
+      };
+    },
+    template: `
+  <div class="debts-view">
+    <div class="debt-summary" v-if="store.debtsReady">
+      <div class="debt-hero">
+        <div class="watermark"><icon name="wallet" size="118"/></div>
+        <div class="dh-label">סך החובות הפתוחים</div>
+        <div class="dh-value">{{ fmtMoney(openTotal) }}<span class="cur">₪</span></div>
+        <div class="dh-sub" v-if="open.length">{{ open.length }} חובות ממתינים לתשלום</div>
+        <div class="dh-sub" v-else>הכול שולם — אין חובות פתוחים</div>
+      </div>
+      <div class="debt-tile">
+        <div class="dt-label">ממתין הכי הרבה זמן</div>
+        <div class="dt-value">{{ oldest ? daysSince(oldest.treatment_date) + ' ימים' : '—' }}</div>
+        <div class="dt-sub">{{ oldest ? oldest.client_name : 'אין חובות פתוחים' }}</div>
+      </div>
+      <div class="debt-tile">
+        <div class="dt-label">תזכורות שממתינות לשליחה</div>
+        <div class="dt-value">{{ dueNow }}</div>
+        <div class="dt-sub">יוצאות אוטומטית כל בוקר</div>
+      </div>
+      <div class="debt-tile">
+        <div class="dt-label">שולם ב-30 הימים האחרונים</div>
+        <div class="dt-value">{{ fmtMoney(paidLast30) }} ₪</div>
+        <div class="dt-sub">{{ paid.length }} חובות נסגרו בסך הכול</div>
+      </div>
+    </div>
+
+    <div class="debt-toolbar" v-if="store.debtsReady">
+      <div class="seg">
+        <button :class="{on:filter==='open'}" @click="filter='open'">פתוחים{{ open.length ? ' · ' + open.length : '' }}</button>
+        <button :class="{on:filter==='paid'}" @click="filter='paid'">שולמו</button>
+        <button :class="{on:filter==='all'}" @click="filter='all'">הכול</button>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" style="padding:9px 16px;font-size:13px"
+        :disabled="sweeping || !dueNow"
+        :title="dueNow ? 'שליחה של כל התזכורות שממתינות' : 'אין תזכורות שממתינות לשליחה'"
+        @click="remindAllDue">
+        <icon name="mail" size="15"/>{{ sweeping ? 'שולחת…' : 'שליחת התזכורות שממתינות' }}
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="debt-list" v-if="list.length">
+        <div class="debt-row" v-for="d in list" :key="d.id" :class="{paid:d.status==='paid'}">
+          <div class="debt-amount">{{ fmtMoney(d.amount) }}<span class="cur">₪</span></div>
+          <div class="debt-main">
+            <div class="client">
+              {{ d.client_name }}
+              <span class="badge badge-paid" v-if="d.status==='paid'">שולם</span>
+            </div>
+            <div class="svc">
+              <template v-if="d.services && d.services.name">{{ d.services.name }} · </template>
+              {{ fmtISO(d.treatment_date) }}
+              <template v-if="d.status==='open'"> · לפני {{ daysSince(d.treatment_date) }} ימים</template>
+            </div>
+            <div class="notes" v-if="d.notes">{{ d.notes }}</div>
+            <div class="debt-rem" :class="remState(d).cls">
+              <icon :name="remState(d).icon" size="12"/>{{ remState(d).text }}
+            </div>
+          </div>
+          <div class="debt-phone" dir="ltr">{{ d.client_phone }}</div>
+          <div class="debt-actions">
+            <button class="icon-btn" v-if="d.status==='open'" :disabled="sendingId===d.id"
+              title="שליחת תזכורת עכשיו" @click="remindOne(d)"><icon name="mail" size="15"/></button>
+            <button class="icon-btn" :title="d.status==='open' ? 'סימון כשולם' : 'החזרה למצב פתוח'"
+              @click="togglePaid(d)"><icon :name="d.status==='open' ? 'check' : 'x'" size="15"/></button>
+            <button class="icon-btn" title="עריכה" @click="$emit('edit-debt', d)"><icon name="edit" size="15"/></button>
+            <button class="icon-btn" title="מחיקה" @click="removeDebt(d)"><icon name="trash" size="15"/></button>
+          </div>
+        </div>
+      </div>
+      <div class="empty-state" v-else-if="!store.debtsReady">
+        <div class="ic"><icon name="alert-triangle" size="30"/></div>
+        <strong>מסך החובות עוד לא הופעל בבסיס הנתונים</strong>
+        <span>
+          יש להריץ פעם אחת את <code>supabase/add-debts.sql</code> ב-SQL editor של Supabase,
+          ואז לרענן את הדף. עד אז אפשר להמשיך לעבוד עם התורים כרגיל.
+        </span>
+      </div>
+      <div class="empty-state" v-else>
+        <div class="ic"><icon name="wallet" size="30"/></div>
+        <strong v-if="filter==='open'">אין חובות פתוחים</strong>
+        <strong v-else-if="filter==='paid'">עוד לא נסגרו חובות</strong>
+        <strong v-else>אין חובות במערכת</strong>
+        <span>לוחצים על "חוב חדש" כדי לרשום תשלום שלא בוצע</span>
+      </div>
+    </div>
+  </div>`
+  };
+
   /* ---------------- Services view ---------------- */
   const ServicesView = {
     setup() {
@@ -2015,12 +2788,14 @@
 
   /* ---------------- App shell ---------------- */
   const AppShell = {
-    components: { TodayView, MonthView, ServicesView, SettingsView, AppointmentModal },
+    components: { TodayView, MonthView, DebtsView, ServicesView, SettingsView, AppointmentModal, DebtModal },
     setup() {
       const view = ref('today');
       const selectedDate = ref(new Date());
       const modalOpen = ref(false);
       const editingAppt = ref(null);
+      const debtModalOpen = ref(false);
+      const editingDebt = ref(null);
 
       function openNew() { editingAppt.value = null; modalOpen.value = true; }
       function openEdit(appt) { editingAppt.value = appt; modalOpen.value = true; }
@@ -2028,12 +2803,26 @@
       function onSaved() { closeModal(); }
       function openDay(d) { selectedDate.value = d; view.value = 'today'; }
 
+      function openNewDebt() { editingDebt.value = null; debtModalOpen.value = true; }
+      function openEditDebt(debt) { editingDebt.value = debt; debtModalOpen.value = true; }
+      function closeDebtModal() { debtModalOpen.value = false; editingDebt.value = null; }
+      async function onDebtSaved() { closeDebtModal(); await loadDebts(); }
+
+      // the floating button belongs to whichever screen can create something
+      const fabLabel = computed(() => view.value === 'debts' ? 'חוב חדש' : 'תור חדש');
+      function onFab() { view.value === 'debts' ? openNewDebt() : openNew(); }
+      const openDebtCount = computed(() => openDebts().length);
+
       async function logout() { await supa.auth.signOut(); store.session = null; }
 
-      const titles = { today: 'היום', month: 'החודש', services: 'הטיפולים שלי', settings: 'הגדרות' };
+      const titles = { today: 'היום', month: 'החודש', debts: 'חובות', services: 'הטיפולים שלי', settings: 'הגדרות' };
       const subtitle = computed(() => view.value === 'today' ? heDate(selectedDate.value) : '');
 
-      return { view, selectedDate, modalOpen, editingAppt, openNew, openEdit, closeModal, onSaved, openDay, logout, titles, subtitle, store, toISODate };
+      return {
+        view, selectedDate, modalOpen, editingAppt, openNew, openEdit, closeModal, onSaved, openDay,
+        debtModalOpen, editingDebt, openNewDebt, openEditDebt, closeDebtModal, onDebtSaved,
+        fabLabel, onFab, openDebtCount, logout, titles, subtitle, store, toISODate,
+      };
     },
     template: `
   <div class="shell">
@@ -2041,6 +2830,7 @@
       <div class="brand"><div class="mark">G</div><span>Glow Studio</span></div>
       <button class="nav-item" :class="{active:view==='today'}" @click="view='today'"><span class="ic"><icon name="calendar" size="18"/></span>היום</button>
       <button class="nav-item" :class="{active:view==='month'}" @click="view='month'"><span class="ic"><icon name="calendar-week" size="18"/></span>החודש</button>
+      <button class="nav-item" :class="{active:view==='debts'}" @click="view='debts'"><span class="ic"><icon name="wallet" size="18"/></span>חובות<span class="count" v-if="openDebtCount">{{ openDebtCount }}</span></button>
       <button class="nav-item" :class="{active:view==='services'}" @click="view='services'"><span class="ic"><icon name="sparkles" size="18"/></span>טיפולים</button>
       <button class="nav-item" :class="{active:view==='settings'}" @click="view='settings'"><span class="ic"><icon name="sliders" size="18"/></span>הגדרות</button>
       <div class="sidebar-footer">
@@ -2056,24 +2846,27 @@
           <div class="sub" v-if="subtitle">{{ subtitle }}</div>
         </div>
       </div>
-      <div class="content" :class="{'has-fab': view==='today' || view==='month'}">
+      <div class="content" :class="{'has-fab': view==='today' || view==='month' || view==='debts'}">
         <today-view v-if="view==='today'" :selected="selectedDate" @update:selected="selectedDate=$event" @new-appt="openNew" @edit-appt="openEdit" />
         <month-view v-else-if="view==='month'" :selected="selectedDate" @update:selected="selectedDate=$event" @open-day="openDay" />
+        <debts-view v-else-if="view==='debts'" @edit-debt="openEditDebt" />
         <services-view v-else-if="view==='services'" />
         <settings-view v-else-if="view==='settings'" />
       </div>
     </div>
 
-    <button class="fab" @click="openNew" v-if="view==='today' || view==='month'"><icon name="plus" size="17"/> תור חדש</button>
+    <button class="fab" @click="onFab" v-if="view==='today' || view==='month' || view==='debts'"><icon name="plus" size="17"/> {{ fabLabel }}</button>
 
     <nav class="tabbar">
       <button :class="{active:view==='today'}" @click="view='today'"><span class="ic"><icon name="calendar" size="18"/></span>היום</button>
       <button :class="{active:view==='month'}" @click="view='month'"><span class="ic"><icon name="calendar-week" size="18"/></span>החודש</button>
+      <button :class="{active:view==='debts'}" @click="view='debts'"><span class="ic"><icon name="wallet" size="18"/></span>חובות</button>
       <button :class="{active:view==='services'}" @click="view='services'"><span class="ic"><icon name="sparkles" size="18"/></span>טיפולים</button>
       <button :class="{active:view==='settings'}" @click="view='settings'"><span class="ic"><icon name="sliders" size="18"/></span>הגדרות</button>
     </nav>
 
     <appointment-modal v-if="modalOpen" :editing="editingAppt" :preset-date="toISODate(selectedDate)" @close="closeModal" @saved="onSaved" />
+    <debt-modal v-if="debtModalOpen" :editing="editingDebt" @close="closeDebtModal" @saved="onDebtSaved" />
   </div>`
   };
 
