@@ -651,10 +651,42 @@
     border-color: var(--accent);
   }
 
+  /* date + "open this day" button share one row, so neither overlaps the other */
+  .month-day .md-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    width: 100%;
+  }
+
   .month-day .md-date {
     font-size: 15px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+  }
+
+  .md-open {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 21px;
+    height: 21px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--text-soft);
+    cursor: pointer;
+    opacity: .5;
+  }
+
+  .month-day:hover .md-open,
+  .md-open:hover,
+  .md-open:focus-visible {
+    opacity: 1;
+    border-color: var(--accent);
+    color: var(--accent-dark);
   }
 
   .month-day .md-count {
@@ -1160,6 +1192,18 @@
       font-size: 13px;
     }
 
+    .month-day .md-top {
+      justify-content: center;
+      gap: 3px;
+    }
+
+    .md-open {
+      width: 17px;
+      height: 17px;
+      border-radius: 5px;
+      opacity: .65;
+    }
+
     .month-day .md-count {
       font-size: 10px;
       padding: 1px 6px;
@@ -1246,6 +1290,7 @@
     'alert-triangle': '<polygon points="12,3 22,20 2,20"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/>',
     'empty-calendar': '<rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="7.5" y1="14" x2="7.51" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16.5" y1="14" x2="16.51" y2="14"/>',
     plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+    list: '<circle cx="4.5" cy="6" r="1.1" fill="currentColor" stroke="none"/><line x1="9" y1="6" x2="20" y2="6"/><circle cx="4.5" cy="12" r="1.1" fill="currentColor" stroke="none"/><line x1="9" y1="12" x2="20" y2="12"/><circle cx="4.5" cy="18" r="1.1" fill="currentColor" stroke="none"/><line x1="9" y1="18" x2="20" y2="18"/>',
   };
   const Icon = {
     props: { name: String, size: { type: [Number, String], default: 18 } },
@@ -1572,12 +1617,19 @@
     </div>
     <div class="month-head"><span v-for="(n, i) in WEEKDAYS_SHORT" :key="i">{{ n }}</span></div>
     <div class="month-grid">
-      <button class="month-day" v-for="d in gridDays" :key="toISODate(d)"
+      <div class="month-day" v-for="d in gridDays" :key="toISODate(d)" role="button" tabindex="0"
         :class="{ other: !inMonth(d), today: toISODate(d)===todayStr, sel: toISODate(d)===selStr, closed: isClosed(d) }"
-        :title="heDate(d)" @click="$emit('update:selected', d)" @dblclick="$emit('open-day', d)">
-        <span class="md-date">{{ d.getDate() }}</span>
+        :title="heDate(d)" @click="$emit('update:selected', d)" @dblclick="$emit('open-day', d)"
+        @keydown.enter.prevent="$emit('update:selected', d)" @keydown.space.prevent="$emit('update:selected', d)">
+        <div class="md-top">
+          <span class="md-date">{{ d.getDate() }}</span>
+          <button class="md-open" :title="'מעבר ליום ' + heDate(d) + ' — צפייה בכל הטיפולים'"
+            :aria-label="'מעבר ליום ' + heDate(d)" @click.stop="$emit('open-day', d)">
+            <icon name="list" size="12"/>
+          </button>
+        </div>
         <span class="md-count" v-if="countFor(d)">{{ countFor(d) }}<span class="md-count-label"> תורים</span></span>
-      </button>
+      </div>
     </div>
   </div>`
   };
